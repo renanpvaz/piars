@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Assigned Pull Requests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        #results {
+            margin-top: 20px;
+        }
+
+        .pr {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .pr-title {
+            font-weight: bold;
+        }
+
+        .pr-repo {
+            color: #555;
+        }
+
+        .filter {
+            border-radius: 8px;
+            background: antiquewhite;
+            padding: 6px 8px;
+            border: 1px solid #d5ccbf;
+            cursor: pointer;
+        }
+
+        .filter+.filter {
+            margin-left: 4px;
+        }
+
+        .filter:disabled {
+            opacity: 0.5
+        }
+    </style>
+</head>
+
+<body>
+    <script src="view.js"></script>
+    <script src="tests.js"></script>
+</body>
+
+</html>

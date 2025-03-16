@@ -8,111 +8,70 @@
 // - [ ] parens
 // - [ ] comparison reviewRequests.length:>3
 // - [ ] comparison @self in reviewRequests
-// - [ ] wild card repo:identity*
+// - [ ] wild card repo:thing*
 
-class QueryParser {
-    constructor() {
-        this.consumed = ''
-        this.assigns = {}
-        this.instructions = []
-        this.state = 'initial'
-    }
+function parse(query) {
+    let remaining = query.split(' ')
+    let expression
+    const parsed = []
 
-    symbol(...args) {
-        this.instructions.push({ name: 'symbol', args })
-        return this
-    }
-
-    chompWhile(...args) {
-        this.instructions.push({ name: 'chompWhile', args })
-        return this
-    }
-
-    keep(...args) {
-        this.instructions.push({ name: 'keep', args })
-        return this
-    }
-
-    drop(...args) {
-        this.instructions.push({ name: 'drop', args })
-        return this
-    }
-
-    run_keep(name, parser) {
-        const result = parser.run(this.string)
-
-        if (parser.state === 'done') {
-            this.assigns[name] = result
-            this.string = parser.string
-        } else {
-            this.problem(parser.problem)
-        }
-
-    }
-
-    run_drop(parser) {
-        parser.run(this.string)
-
-        if (parser.state === 'done') {
-            this.string = parser.string
-        } else {
-            this.problem(parser.problem)
+    while (expression = remaining.shift()) {
+        switch (expression) {
+            case 'NOT': break
+            case 'AND': break
+            case 'OR': break
+            default:
+                parsed.push(parseExpression(expression))
+                break
         }
     }
 
-    run_chompWhile(regex) {
-        while (this.string.length) {
-            if (this.string[0].match(regex)) this.consume(1)
-            else break
-        }
-
-        return this
-    }
-
-    run_symbol(char) {
-        if (this.string[0] === char) {
-            this.consume(1)
-        } else {
-            this.problem('symbol')
-        }
-
-        return this
-    }
-
-    consume(n) {
-        this.consumed += this.string.substring(0, n)
-        this.string = this.string.substring(n)
-    }
-
-    problem(context) {
-        this.state = 'halted'
-        this.problem = `Expected ${context} at ${this.consumed}`
-    }
-
-    run(string) {
-        this.string = string
-        this.state = 'running'
-
-        for (let instruction of this.instructions) {
-            if (this.state !== 'running') break
-
-            this[`run_${instruction.name}`](...instruction.args)
-        }
-
-        this.state = 'done'
-
-        return this.consumed
-    }
+    return parsed
 }
 
-const P = () => new QueryParser()
+function parseExpression(expression) {
+    const state = { consumed: '', remaining: expression }
+    const attribute = consumeWhile(/^[a-zA-Z][a-zA-Z0-9_]*/g, state)
 
-const alphanum = P()
-    .chompWhile(/^[a-zA-Z][a-zA-Z0-9_]*/g)
+    const operator = consumeWhile(':', state)
 
-const basicFilter = P()
-    .keep('attribute', alphanum)
-    .drop(P().symbol(':'))
-    .keep('value', alphanum)
+    const subOperator = consumeOneOf([
+        s => consumeWhile('>', s),
+        s => consumeWhile('<', s)
+    ], state)
 
+    const value = consumeWhile(/^[a-zA-Z0-9_]*/g, state)
+
+    return { attribute, operator: operator + subOperator, value }
+}
+
+function consumeOneOf(consumers, initialState) {
+    let consumer
+
+    while (consumer = consumers.shift()) {
+        const state = { ...initialState }
+        const result = consumer(state)
+
+        if (result.length) {
+            Object.assign(initialState, state)
+            return result
+        }
+    }
+
+    return ''
+}
+
+function consumeWhile(regex, state) {
+    state.consumed = ''
+
+    while (state.remaining.length) {
+        if (state.remaining[0].match(regex)) {
+            state.consumed += state.remaining[0]
+            state.remaining = state.remaining.substring(1)
+
+        } else break
+    }
+
+    return state.consumed
+}
 
