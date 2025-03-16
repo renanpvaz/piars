@@ -1,7 +1,7 @@
 // TODO:
-// - [x] repo tabs
+// - [ ] repo tabs
 // - [x] filter dependabot only
-// - [ ] enrich with PR data
+// - [x] enrich with PR data
 // - [ ] sort by stale first
 // - [ ] sort by number of approvals
 // - [ ] filter missing review
