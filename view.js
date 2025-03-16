@@ -3,11 +3,10 @@
 // 
 // features
 // - [x] basic equals
+// - [x] comparison reviewRequests.length:>3
 // - [ ] negation: NOT
 // - [ ] AND, OR
 // - [ ] parens
-// - [ ] comparison reviewRequests.length:>3
-// - [ ] comparison @self in reviewRequests
 // - [ ] wild card repo:thing*
 
 function parse(query) {
@@ -31,7 +30,8 @@ function parse(query) {
 
 function parseExpression(expression) {
     const state = { consumed: '', remaining: expression }
-    const attribute = consumeWhile(/^[a-zA-Z][a-zA-Z0-9_]*/g, state)
+
+    const attribute = consumeWhile(/^[a-zA-Z0-9_\.]*/g, state)
 
     const operator = consumeWhile(':', state)
 
@@ -65,7 +65,8 @@ function consumeWhile(regex, state) {
     state.consumed = ''
 
     while (state.remaining.length) {
-        if (state.remaining[0].match(regex)) {
+        const match = state.remaining[0].match(regex)
+        if (match && match[0]) {
             state.consumed += state.remaining[0]
             state.remaining = state.remaining.substring(1)
 

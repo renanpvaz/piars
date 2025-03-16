@@ -1,19 +1,38 @@
-test('parses simple filters', deepEqual(parse('repo:thing')[0], {
-    "attribute": "repo",
-    "operator": ":",
-    "value": "thing"
-}))
+test('parses simple filters', parse('repo:thing')[0], {
+    operator: ":",
+    attribute: "repo",
+    value: "thing"
+})
 
-test('parses comparison filter', deepEqual(parse('count:>3')[0], {
-    "attribute": "count",
-    "operator": ":>",
-    "value": "3"
-}))
+test('parses comparison filter', parse('count:>3')[0], {
+    attribute: "count",
+    operator: ":>",
+    value: "3"
+})
 
-test('parses multiple filters', parse('repo:test author:fulano').length === 2)
+test('supports nested attributes', parse('notification.pullRequest.title:cool')[0], {
+    attribute: "notification.pullRequest.title",
+    operator: ":",
+    value: "cool"
+})
 
-function test(name, assertion) {
-    console.log(`${!!assertion ? '[PASSED]' : '[FAILED]'} ${name}`)
+test('supports snake case', parse('pull_request:cool')[0], {
+    attribute: "pull_request",
+    operator: ":",
+    value: "cool"
+})
+
+test('parses multiple filters', parse('repo:test author:fulano').length, 2)
+
+function test(name, actual, expected) {
+    const passed = deepEqual(expected, actual)
+
+    if (passed) {
+        console.log(`[PASSED] ${name}`)
+    } else {
+        console.log(`[FAILED] ${name}`)
+        console.table({ expected, actual })
+    }
 }
 
 
