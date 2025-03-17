@@ -23,8 +23,17 @@ function parse(query) {
                     expression: parseExpression(remaining.shift())
                 })
                 break
-            case 'AND': break
-            case 'OR': break
+            case 'AND':
+                // assumed by default
+                break
+            case 'OR':
+                const left = parsed.pop()
+
+                parsed.push({
+                    type: 'or',
+                    expressions: [left, parseExpression(remaining.shift())],
+                })
+                break
             default:
                 parsed.push(parseExpression(expression))
                 break

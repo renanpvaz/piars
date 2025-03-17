@@ -36,6 +36,14 @@ test('supports NOT operand', parse('NOT repo:react')[0], {
     }
 })
 
+test('supports OR operation', parse('repo:one OR repo:two'), [{
+    type: 'or',
+    expressions: [
+        { type: 'filter', attribute: "repo", operator: ":", value: "one" },
+        { type: 'filter', attribute: "repo", operator: ":", value: "two" }
+    ]
+}])
+
 test('parses multiple filters', parse('repo:test author:fulano').length, 2)
 
 function test(name, actual, expected) {
@@ -51,8 +59,23 @@ function test(name, actual, expected) {
 
 
 function deepCompare(left, right) {
-    if (typeof left !== typeof right) return { equal: false, left, right }
-    if (Array.isArray(left) !== Array.isArray(right)) return { equal: false, left, right }
+    const pass = { equal: true }
+    const fail = { equal: false, left, right }
+
+    if (typeof left !== typeof right) return fail
+
+    if (Array.isArray(left)) {
+        if (!Array.isArray(right)) return fail
+        if (left.length !== right.length) return fail
+
+        const unequal = left
+            .map((element, i) => deepCompare(element, right[i]))
+            .find(element => !element.equal)
+
+        if (unequal) return unequal
+
+        return pass
+    }
 
     if (typeof left === 'object') {
         const keysLeft = Object.keys(left)
@@ -64,7 +87,7 @@ function deepCompare(left, right) {
             if (!result.equal) return result
         }
 
-        return { equal: true, left, right }
+        return pass
     } else {
         const equal = left === right
 
