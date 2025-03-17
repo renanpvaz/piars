@@ -9,6 +9,7 @@
 // - [ ] parens
 // - [ ] wild card repo:thing*
 
+
 function parse(query) {
     let remaining = query.split(' ')
     let expression
@@ -16,7 +17,12 @@ function parse(query) {
 
     while (expression = remaining.shift()) {
         switch (expression) {
-            case 'NOT': break
+            case 'NOT':
+                parsed.push({
+                    type: 'not',
+                    expression: parseExpression(remaining.shift())
+                })
+                break
             case 'AND': break
             case 'OR': break
             default:
@@ -32,17 +38,14 @@ function parseExpression(expression) {
     const state = { consumed: '', remaining: expression }
 
     const attribute = consumeWhile(/^[a-zA-Z0-9_\.]*/g, state)
-
     const operator = consumeWhile(':', state)
-
     const subOperator = consumeOneOf([
         s => consumeWhile('>', s),
         s => consumeWhile('<', s)
     ], state)
-
     const value = consumeWhile(/^[a-zA-Z0-9_]*/g, state)
 
-    return { attribute, operator: operator + subOperator, value }
+    return { type: 'filter', attribute, operator: operator + subOperator, value }
 }
 
 function consumeOneOf(consumers, initialState) {
