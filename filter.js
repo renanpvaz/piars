@@ -16,6 +16,10 @@ function runFilter(item, filter) {
   switch (filter.type) {
     case 'filter':
       return compare(item, filter)
+    case 'inclusion':
+      const [{ value: target }, { value: property }] = filter.expressions
+      const value = access(item, property)
+      return Array.isArray(value) && value.includes(target)
   }
 }
 
@@ -30,14 +34,7 @@ function compare(item, filter) {
     case 'endsWith':
       return value.endsWith(filter.value)
     case 'includes':
-      return Array.isArray(value) && value.includes(filter.value)
   }
-}
-
-function includes(item, filter) {
-  const value = access(item, filter.attribute)
-
-  return Array.isArray(value) && value.includes(filter.value)
 }
 
 function access(data, path) {
@@ -73,6 +70,15 @@ function doParse(expressions) {
         })
         break
       }
+      case 'IN': {
+        const left = parsed.pop()
+
+        parsed.push({
+          type: 'inclusion',
+          expressions: [left, parseExpression(remaining.shift())],
+        })
+        break
+      }
       default:
         if (expression.startsWith('(')) {
           remaining.unshift(expression.substring(1))
@@ -99,16 +105,19 @@ function doParse(expressions) {
 function parseExpression(expression) {
   const state = { consumed: '', remaining: expression }
 
-  const attribute = consumeWhile(/^[a-zA-Z0-9_\.]*/g, state)
+  const term = consumeWhile(/^[a-zA-Z0-9_\.]*/g, state)
+  const attributeFilter = !!consumeWhile(':', state)
 
-  consumeWhile(':', state)
+  if (attributeFilter) {
+    return { type: 'filter', attribute: term, ...parseAttributeFilter(state) }
+  }
 
+  return { type: 'filter', operation: 'match', value: term }
+}
+
+function parseAttributeFilter(state) {
   const subOperator = consumeOneOf(
-    [
-      (s) => consumeWhile('>', s),
-      (s) => consumeWhile('<', s),
-      (s) => consumeWhile('&', s),
-    ],
+    [(s) => consumeWhile('>', s), (s) => consumeWhile('<', s)],
     state,
   )
 
@@ -126,11 +135,9 @@ function parseExpression(expression) {
         ? 'greaterThan'
         : subOperator === '<'
           ? 'lessThan'
-          : subOperator === '&'
-            ? 'includes'
-            : 'equals'
+          : 'equals'
 
-  return { type: 'filter', attribute, operation, value }
+  return { value, operation }
 }
 
 function consumeOneOf(consumers, initialState) {

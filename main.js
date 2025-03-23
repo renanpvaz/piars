@@ -22,8 +22,8 @@ state.tabs = {
   },
   reviewRequested: {
     name: 'reviewRequested',
-    search: 'reviewRequests:&renanpvaz',
-    filters: parseFilters('reviewRequests:&renanpvaz'),
+    search: 'renanpvaz IN reviewRequests',
+    filters: parseFilters('renanpvaz IN reviewRequests'),
   },
   dependabot: {
     name: 'dependabot',
