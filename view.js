@@ -1,17 +1,18 @@
 // TODO
-// - [ ] split state and description
-// 
-// features
 // - [x] basic equals
 // - [x] comparison reviewRequests.length:>3
-// - [ ] negation: NOT
-// - [ ] AND, OR
-// - [ ] parens
+// - [x] negation: NOT
+// - [x] AND, OR
+// - [x] parens
 // - [ ] wild card repo:thing*
 
 
 function parse(query) {
-    let remaining = query.split(' ')
+    return doParse(query.split(' '))
+}
+
+function doParse(expressions) {
+    let remaining = expressions
     let expression
     const parsed = []
 
@@ -31,11 +32,25 @@ function parse(query) {
 
                 parsed.push({
                     type: 'or',
-                    expressions: [left, parseExpression(remaining.shift())],
+                    expressions: [left, ...doParse(remaining)],
                 })
                 break
             default:
-                parsed.push(parseExpression(expression))
+                if (expression.startsWith('(')) {
+                    remaining.unshift(expression.substring(1))
+                    parsed.push({
+                        type: 'group',
+                        expressions: doParse(remaining)
+                    })
+                } else if (expression.endsWith(')')) {
+                    expression = expression.slice(0, -1)
+                    parsed.push(parseExpression(expression))
+
+                    return parsed
+                } else {
+                    parsed.push(parseExpression(expression))
+                }
+
                 break
         }
     }
@@ -47,14 +62,27 @@ function parseExpression(expression) {
     const state = { consumed: '', remaining: expression }
 
     const attribute = consumeWhile(/^[a-zA-Z0-9_\.]*/g, state)
-    const operator = consumeWhile(':', state)
+
+    consumeWhile(':', state)
+
     const subOperator = consumeOneOf([
         s => consumeWhile('>', s),
         s => consumeWhile('<', s)
     ], state)
+
+    const startWildcard = consumeWhile(/\*/g, state)
+
     const value = consumeWhile(/^[a-zA-Z0-9_]*/g, state)
 
-    return { type: 'filter', attribute, operator: operator + subOperator, value }
+    const endWildcard = consumeWhile(/\*/g, state)
+
+    const operation = startWildcard
+        ? 'endsWith' : endWildcard
+            ? 'startsWith' : subOperator === '>'
+                ? 'greaterThan' : subOperator === '<'
+                    ? 'lessThan' : 'equals'
+
+    return { type: 'filter', attribute, operation, value }
 }
 
 function consumeOneOf(consumers, initialState) {
