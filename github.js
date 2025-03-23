@@ -140,7 +140,7 @@ async function enrichWithPullRequestData(notifications) {
 function toEntry(notification, pullRequest) {
     return {
         title: notification.subject.title,
-        url: `https:github.com/${notification.repository.full_name}/pulls/${pullRequest.number}`,
+        url: `https:github.com/${notification.repository.full_name}/pull/${pullRequest.number}`,
         unread: notification.unread,
         updatedAt: notification.updatedAt,
         reason: notification.reason,

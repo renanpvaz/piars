@@ -27,7 +27,15 @@ function compare(item, filter) {
             return value.startsWith(filter.value)
         case 'endsWith':
             return value.endsWith(filter.value)
+        case 'includes':
+            return Array.isArray(value) && value.includes(filter.value)
     }
+}
+
+function includes(item, filter) {
+    const value = access(item, filter.attribute)
+
+    return Array.isArray(value) && value.includes(filter.value)
 }
 
 function access(data, path) {
@@ -54,7 +62,7 @@ function doParse(expressions) {
             case 'AND':
                 // assumed by default
                 break
-            case 'OR':
+            case 'OR': {
                 const left = parsed.pop()
 
                 parsed.push({
@@ -62,6 +70,7 @@ function doParse(expressions) {
                     expressions: [left, ...doParse(remaining)],
                 })
                 break
+            }
             default:
                 if (expression.startsWith('(')) {
                     remaining.unshift(expression.substring(1))
@@ -94,7 +103,8 @@ function parseExpression(expression) {
 
     const subOperator = consumeOneOf([
         s => consumeWhile('>', s),
-        s => consumeWhile('<', s)
+        s => consumeWhile('<', s),
+        s => consumeWhile('&', s)
     ], state)
 
     const startWildcard = consumeWhile(/\*/g, state)
@@ -107,7 +117,8 @@ function parseExpression(expression) {
         ? 'endsWith' : endWildcard
             ? 'startsWith' : subOperator === '>'
                 ? 'greaterThan' : subOperator === '<'
-                    ? 'lessThan' : 'equals'
+                    ? 'lessThan' : subOperator === '&'
+                        ? 'includes' : 'equals'
 
     return { type: 'filter', attribute, operation, value }
 }

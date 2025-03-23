@@ -20,6 +20,11 @@ state.tabs = {
         search: '',
         filters: []
     },
+    reviewRequested: {
+        name: 'reviewRequested',
+        search: 'reviewRequests:&renanpvaz',
+        filters: parseFilters('reviewRequests:&renanpvaz')
+    },
     dependabot: {
         name: 'dependabot',
         search: 'title:Bump*',

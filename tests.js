@@ -1,53 +1,60 @@
-test('parses simple filters', parse('repo:thing')[0], {
+test('parses simple filters', parseFilters('repo:thing')[0], {
     type: 'filter',
     operation: "equals",
     attribute: "repo",
     value: "thing"
 })
 
-test('parses comparison filter', parse('count:>3')[0], {
+test('parses comparison filter', parseFilters('count:>3')[0], {
     type: 'filter',
     attribute: "count",
     operation: "greaterThan",
     value: "3"
 })
 
-test('parses less than filter', parse('count:<1')[0], {
+test('parses less than filter', parseFilters('count:<1')[0], {
     type: 'filter',
     attribute: "count",
     operation: "lessThan",
     value: "1"
 })
 
-test('parses wildcard at start', parse('repo:*eact')[0], {
+test('parses wildcard at start', parseFilters('repo:*eact')[0], {
     type: 'filter',
     attribute: "repo",
     operation: "endsWith",
     value: "eact"
 })
 
-test('parses wildcard at end', parse('repo:lp*')[0], {
+test('parses wildcard at end', parseFilters('repo:lp*')[0], {
     type: 'filter',
     attribute: "repo",
     operation: "startsWith",
     value: "lp"
 })
 
-test('supports nested attributes', parse('notification.pullRequest.title:cool')[0], {
+test('parses array inclusion', parseFilters('reviewers:&myself')[0], {
+    type: 'filter',
+    attribute: "reviewers",
+    operation: "includes",
+    value: "myself"
+})
+
+test('supports nested attributes', parseFilters('notification.pullRequest.title:cool')[0], {
     type: 'filter',
     attribute: "notification.pullRequest.title",
     operation: "equals",
     value: "cool"
 })
 
-test('supports snake case', parse('pull_request:cool')[0], {
+test('supports snake case', parseFilters('pull_request:cool')[0], {
     type: 'filter',
     attribute: "pull_request",
     operation: "equals",
     value: "cool"
 })
 
-test('supports NOT operand', parse('NOT repo:react')[0], {
+test('supports NOT operand', parseFilters('NOT repo:react')[0], {
     type: 'not',
     expression: {
         type: 'filter',
@@ -57,7 +64,7 @@ test('supports NOT operand', parse('NOT repo:react')[0], {
     }
 })
 
-test('supports OR operation', parse('repo:one OR repo:two'), [{
+test('supports OR operation', parseFilters('repo:one OR repo:two'), [{
     type: 'or',
     expressions: [
         { type: 'filter', attribute: "repo", operation: "equals", value: "one" },
@@ -65,9 +72,9 @@ test('supports OR operation', parse('repo:one OR repo:two'), [{
     ]
 }])
 
-test('parses multiple filters', parse('repo:test author:fulano').length, 2)
+test('parses multiple filters', parseFilters('repo:test author:fulano').length, 2)
 
-test('parses groups of filters', parse('(repo:test OR author:fulano)')[0], {
+test('parses groups of filters', parseFilters('(repo:test OR author:fulano)')[0], {
     type: 'group',
     expressions: [{
         type: 'or',
@@ -78,7 +85,7 @@ test('parses groups of filters', parse('(repo:test OR author:fulano)')[0], {
     }]
 })
 
-test('combines grouped expressions', parse('test:1 OR (name:thing AND repo:test)'), [
+test('combines grouped expressions', parseFilters('test:1 OR (name:thing AND repo:test)'), [
     {
         "type": "or",
         "expressions": [
@@ -109,7 +116,7 @@ test('combines grouped expressions', parse('test:1 OR (name:thing AND repo:test)
     }
 ])
 
-test('parses nested groups', parse('(name:thing AND (repo:test OR repo:test2))'), [
+test('parses nested groups', parseFilters('(name:thing AND (repo:test OR repo:test2))'), [
     {
         "type": "group",
         "expressions": [
