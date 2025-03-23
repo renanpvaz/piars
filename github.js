@@ -1,5 +1,5 @@
 async function fetchNotifications() {
-    const url = `https://api.github.com/notifications`;
+    const url = `https://api.github.com/notifications?all=true`;
     const cache = sessionStorage.getItem('notification_data')
     let data = cache && JSON.parse(cache)
 
@@ -81,7 +81,6 @@ async function fetchPullRequests(reposAndPRs) {
         }
       `;
 
-
     try {
         const response = await fetch('https://api.github.com/graphql', {
             method: 'POST',
@@ -108,15 +107,19 @@ async function fetchPullRequests(reposAndPRs) {
 }
 
 async function enrichWithPullRequestData(notifications) {
-    const pullRequests = notifications.map(n => ({
-        owner: n.repository.owner.login,
-        repo: n.repository.name,
-        number: +n.subject.url.split('/').pop()
-    }))
+    const prNotifications = notifications.filter(n => n.subject.type === 'PullRequest')
+    const pullRequests = prNotifications
+        .map(n => ({
+            owner: n.repository.owner.login,
+            repo: n.repository.name,
+            number: +n.subject.url.split('/').pop()
+        }))
 
     const { data } = await fetchPullRequests(pullRequests)
 
     const pullsPerRepo = Object.values(data).reduce((acc, { pullRequest }) => {
+        if (!pullRequest) return acc
+
         const name = pullRequest.repository.nameWithOwner
 
         if (!(name in acc)) acc[name] = {}
@@ -125,16 +128,28 @@ async function enrichWithPullRequestData(notifications) {
         return acc
     }, {})
 
-    const enriched = notifications.map(n => {
-        if (n.subject.type === 'PullRequest') {
-            const [org, repositoryName, _, pullNumber] = n.subject.url.replace("https://api.github.com/repos/", "").split('/')
-            const name = `${org}/${repositoryName}`
+    return prNotifications.map(n => {
+        const [org, repositoryName, _, pullNumber] = n.subject.url.replace("https://api.github.com/repos/", "").split('/')
+        const name = `${org}/${repositoryName}`
+        const pullRequest = pullsPerRepo[name] && pullsPerRepo[name][pullNumber]
 
-            n.pullRequest = pullsPerRepo[name] && pullsPerRepo[name][pullNumber]
-        }
-
-        return n
+        return toEntry(n, pullRequest)
     })
+}
 
-    return enriched
+function toEntry(notification, pullRequest) {
+    return {
+        title: notification.subject.title,
+        url: `https:github.com/${notification.repository.full_name}/pulls/${pullRequest.number}`,
+        unread: notification.unread,
+        updatedAt: notification.updatedAt,
+        reason: notification.reason,
+        repository: notification.repository.name,
+        repositoryFullName: notification.repository.full_name,
+        reviewRequests: pullRequest.reviewRequests.nodes.map(r => r.requestedReviewer?.name || r.requestedReviewer.login),
+        author: pullRequest.author.login,
+        state: pullRequest.state,
+        draft: pullRequest.isDraft
+    }
+
 }

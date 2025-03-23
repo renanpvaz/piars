@@ -1,9 +1,16 @@
 // TODO:
 // - [ ] typing filter
-// - [ ] sort by stale first
 // - [ ] filter missing review
 // - [ ] polling
 // - [ ] tab number/browser notifications
+
+// TODO filters
+// - am I included in reviewers
+//   - needs "IN" operator
+// - have I reviewed this before
+//   - needs approvers data
+// - is this approved/mergeable
+//   - approvers data? or approval status
 
 const state = {}
 
@@ -15,13 +22,13 @@ state.tabs = {
     },
     dependabot: {
         name: 'dependabot',
-        search: 'subject.title:Bump*',
-        filters: parseFilters('subject.title:Bump*')
+        search: 'title:Bump*',
+        filters: parseFilters('title:Bump*')
     },
     notifications: {
         name: 'notifications',
-        search: 'repository.name:notifications',
-        filters: parseFilters('repository.name:notifications')
+        search: 'repository:notifications',
+        filters: parseFilters('repository:notifications')
     },
     new: {
         name: '+',
@@ -74,9 +81,7 @@ function renderTab(tab) {
     return button
 }
 
-function renderNotification(notification) {
-    const repoName = notification.repository.name
-
+function renderNotification(pr) {
     // TODO: return more than one and flatmap
     // OR group by repo
     // if (!document.getElementById(repoName)) {
@@ -93,10 +98,10 @@ function renderNotification(notification) {
 
     const title = document.createElement('div');
     title.className = 'pr-title';
-    title.textContent = notification.subject.title;
+    title.textContent = pr.title;
 
     const link = document.createElement('a');
-    link.href = notification.subject.url;
+    link.href = pr.url;
     link.textContent = 'View on GitHub';
     link.target = '_blank';
 
