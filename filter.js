@@ -4,10 +4,37 @@
 // - [x] negation: NOT
 // - [x] AND, OR
 // - [x] parens
-// - [ ] wild card repo:thing*
+// - [x] wild card repo:thing*
 
+function runFilters(filters, data) {
+    return data.filter(item => filters.every(filter => runFilter(item, filter)))
+}
 
-function parse(query) {
+function runFilter(item, filter) {
+    switch (filter.type) {
+        case 'filter':
+            return compare(item, filter)
+    }
+}
+
+function compare(item, filter) {
+    const value = access(item, filter.attribute)
+
+    switch (filter.operation) {
+        case 'equals':
+            return value === filter.value
+        case 'startsWith':
+            return value.startsWith(filter.value)
+        case 'endsWith':
+            return value.endsWith(filter.value)
+    }
+}
+
+function access(data, path) {
+    return path.split('.').reduce((acc, prop) => acc[prop], data)
+}
+
+function parseFilters(query) {
     return doParse(query.split(' '))
 }
 

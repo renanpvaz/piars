@@ -9,6 +9,7 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            max-width: 600px;
         }
 
         #results {
@@ -45,15 +46,55 @@
         .filter:disabled {
             opacity: 0.5
         }
+
+        .tabs {
+            margin-bottom: 16px;
+        }
+
+        .tabs:after {
+            content: '';
+            display: block;
+            position: absolute;
+            width: 100%;
+            border-bottom: 1px solid;
+            left: 0;
+            z-index: -1;
+        }
+
+        .tab-button {
+            cursor: pointer;
+            font-size: 16px;
+            border: 1px solid;
+            border-bottom: 0;
+            background: white;
+            padding: 4px 16px;
+            z-index: 1;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+            transform: translateY(1px);
+            border-bottom: 1px solid;
+            opacity: .4;
+        }
+
+        .tab-button+.tab-button {
+            margin-left: 4px;
+        }
+
+        .tab-button--selected {
+            border-bottom-color: transparent;
+            opacity: 1;
+        }
     </style>
 </head>
 
 <body>
     <h1>piars</h1>
-    <div id="filters"></div>
+    <div class="tabs" id="tabs"></div>
+    <div id="search"></div>
     <div id="results"></div>
     <script src="config.js"></script>
-    <script src="view.js"></script>
+    <script src="github.js"></script>
+    <script src="filter.js"></script>
     <script src="main.js"></script>
 </body>
 
