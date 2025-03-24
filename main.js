@@ -20,6 +20,11 @@ state.tabs = {
     search: '',
     filters: [],
   },
+  needsReview: {
+    name: 'needsReview',
+    search: 'NOT state:MERGED AND NOT reviewDecision:APPROVED',
+    filters: parseFilters('NOT state:MERGED AND NOT reviewDecision:APPROVED'),
+  },
   reviewRequested: {
     name: 'reviewRequested',
     search: 'renanpvaz IN reviewRequests',

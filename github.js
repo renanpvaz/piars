@@ -39,15 +39,10 @@ async function fetchPullRequests(reposAndPRs) {
             number
             title
             url
-            assignees(first: 10) {
-                nodes {
-                    login
-                }
-            }
+            changedFiles
             author { login }
-            closed
             isDraft
-            merged
+            reviewDecision
             reviewRequests(first: 10) {
                 nodes {
                     asCodeOwner
@@ -154,6 +149,7 @@ function toEntry(notification, pullRequest) {
       (r) => r.requestedReviewer?.name || r.requestedReviewer.login,
     ),
     author: pullRequest.author.login,
+    reviewDecision: pullRequest.reviewDecision,
     state: pullRequest.state,
     draft: pullRequest.isDraft,
   }

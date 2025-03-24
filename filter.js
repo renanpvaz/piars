@@ -5,6 +5,8 @@
 // - [x] AND, OR
 // - [x] parens
 // - [x] wild card repo:thing*
+// - [ ] run: plain text, not, OR
+// - [ ] NOT group
 
 function runFilters(filters, data) {
   return data.filter((item) =>
@@ -14,6 +16,8 @@ function runFilters(filters, data) {
 
 function runFilter(item, filter) {
   switch (filter.type) {
+    case 'not':
+      return !runFilter(item, filter.expression)
     case 'filter':
       return compare(item, filter)
     case 'inclusion':
