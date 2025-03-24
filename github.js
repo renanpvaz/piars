@@ -42,6 +42,7 @@ async function fetchPullRequests(reposAndPRs) {
             changedFiles
             author { login }
             isDraft
+            createdAt
             reviewDecision
             reviewRequests(first: 10) {
                 nodes {
@@ -152,5 +153,9 @@ function toEntry(notification, pullRequest) {
     reviewDecision: pullRequest.reviewDecision,
     state: pullRequest.state,
     draft: pullRequest.isDraft,
+    age: Math.floor(
+      (Date.now() - new Date(pullRequest.createdAt)) / 1000 / 60 / 60 / 24,
+    ),
+    changedFiles: pullRequest.changedFiles,
   }
 }

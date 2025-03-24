@@ -35,10 +35,15 @@ state.tabs = {
     search: 'title:Bump*',
     filters: parseFilters('title:Bump*'),
   },
-  notifications: {
-    name: 'notifications',
-    search: 'repository:notifications',
-    filters: parseFilters('repository:notifications'),
+  stale: {
+    name: 'stale',
+    search: 'age:>7',
+    filters: parseFilters('age:>7'),
+  },
+  big: {
+    name: 'big',
+    search: 'changedFiles:>10',
+    filters: parseFilters('changedFiles:>10'),
   },
   new: {
     name: '+',

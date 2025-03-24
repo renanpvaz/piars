@@ -37,7 +37,10 @@ function compare(item, filter) {
       return value.startsWith(filter.value)
     case 'endsWith':
       return value.endsWith(filter.value)
-    case 'includes':
+    case 'lessThan':
+      return value < filter.value
+    case 'greaterThan':
+      return value > filter.value
   }
 }
 
@@ -127,7 +130,7 @@ function parseAttributeFilter(state) {
 
   const startWildcard = consumeWhile(/\*/g, state)
 
-  const value = consumeWhile(/^[a-zA-Z0-9_]*/g, state)
+  const value = parseValue(state)
 
   const endWildcard = consumeWhile(/\*/g, state)
 
@@ -142,6 +145,18 @@ function parseAttributeFilter(state) {
           : 'equals'
 
   return { value, operation }
+}
+
+function parseValue(state) {
+  let value = consumeWhile(/^[a-zA-Z0-9_]*/g, state)
+
+  if (value.match(/^\d+$/g)) {
+    value = Number(value)
+  } else if (['true', 'false'].includes(value)) {
+    value = Boolean(value)
+  }
+
+  return value
 }
 
 function consumeOneOf(consumers, initialState) {
