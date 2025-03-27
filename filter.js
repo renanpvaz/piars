@@ -5,8 +5,8 @@
 // - [x] AND, OR
 // - [x] parens
 // - [x] wild card repo:thing*
-// - [ ] run: plain text, not, OR
-// - [ ] NOT group
+// - [x] NOT group
+// - [ ] fix filter running
 
 function runFilters(filters, data) {
   return data.filter((item) =>
@@ -55,7 +55,7 @@ function parseQuery(query) {
 function doParseQuery(tokens) {
   let token = tokens.shift()
   let negate = false
-  let group
+  let expr
 
   if (token === 'NOT') {
     negate = true
@@ -65,7 +65,7 @@ function doParseQuery(tokens) {
   if (token.startsWith('(')) {
     tokens.unshift(token.substring(1))
 
-    group = {
+    expr = {
       type: 'group',
       expression: doParseQuery(tokens),
     }
@@ -73,35 +73,25 @@ function doParseQuery(tokens) {
     return parseExpression(token.slice(0, -1))
   }
 
-  let expr = group || parseExpression(token)
+  expr = expr || parseExpression(token)
 
   if (negate) expr.negate = negate
 
   const [nextToken] = tokens
 
-  switch (nextToken) {
-    case 'OR':
-      tokens.shift()
-      return {
-        type: 'or',
-        expressions: [expr, doParseQuery(tokens)],
-      }
-    case 'IN':
-      tokens.shift()
-      return {
-        type: 'in',
-        expressions: [expr, doParseQuery(tokens)],
-      }
-    case undefined:
-      return { ...expr, ...(negate && { negate }) }
-    case 'AND':
-      tokens.shift()
-    default:
-      // assume AND by default
-      return {
-        type: 'and',
-        expressions: [expr, doParseQuery(tokens)],
-      }
+  if (['OR', 'IN', 'AND'].includes(nextToken)) {
+    tokens.shift()
+    return {
+      type: nextToken.toLowerCase(),
+      expressions: [expr, doParseQuery(tokens)],
+    }
+  } else if (!nextToken) {
+    return { ...expr, ...(negate && { negate }) }
+  }
+
+  return {
+    type: 'and',
+    expressions: [expr, doParseQuery(tokens)],
   }
 }
 
