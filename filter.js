@@ -48,65 +48,61 @@ function access(data, path) {
   return path.split('.').reduce((acc, prop) => acc[prop], data)
 }
 
-function parseFilters(query) {
-  return doParse(query.split(' '))
+function parseQuery(query) {
+  return doParseQuery(query.split(' '))
 }
 
-function doParse(expressions) {
-  let remaining = expressions
-  let expression
-  const parsed = []
+function doParseQuery(tokens) {
+  let token = tokens.shift()
+  let negate = false
+  let group
 
-  while ((expression = remaining.shift())) {
-    switch (expression) {
-      case 'NOT':
-        parsed.push({
-          type: 'not',
-          expression: parseExpression(remaining.shift()),
-        })
-        break
-      case 'AND':
-        // assumed by default
-        break
-      case 'OR': {
-        const left = parsed.pop()
-
-        parsed.push({
-          type: 'or',
-          expressions: [left, ...doParse(remaining)],
-        })
-        break
-      }
-      case 'IN': {
-        const left = parsed.pop()
-
-        parsed.push({
-          type: 'inclusion',
-          expressions: [left, parseExpression(remaining.shift())],
-        })
-        break
-      }
-      default:
-        if (expression.startsWith('(')) {
-          remaining.unshift(expression.substring(1))
-          parsed.push({
-            type: 'group',
-            expressions: doParse(remaining),
-          })
-        } else if (expression.endsWith(')')) {
-          expression = expression.slice(0, -1)
-          parsed.push(parseExpression(expression))
-
-          return parsed
-        } else {
-          parsed.push(parseExpression(expression))
-        }
-
-        break
-    }
+  if (token === 'NOT') {
+    negate = true
+    token = tokens.shift()
   }
 
-  return parsed
+  if (token.startsWith('(')) {
+    tokens.unshift(token.substring(1))
+
+    group = {
+      type: 'group',
+      expression: doParseQuery(tokens),
+    }
+  } else if (token.endsWith(')')) {
+    return parseExpression(token.slice(0, -1))
+  }
+
+  let expr = group || parseExpression(token)
+
+  if (negate) expr.negate = negate
+
+  const [nextToken] = tokens
+
+  switch (nextToken) {
+    case 'OR':
+      tokens.shift()
+      return {
+        type: 'or',
+        expressions: [expr, doParseQuery(tokens)],
+      }
+    case 'IN':
+      tokens.shift()
+      return {
+        type: 'in',
+        expressions: [expr, doParseQuery(tokens)],
+      }
+    case undefined:
+      return { ...expr, ...(negate && { negate }) }
+    case 'AND':
+      tokens.shift()
+    default:
+      // assume AND by default
+      return {
+        type: 'and',
+        expressions: [expr, doParseQuery(tokens)],
+      }
+  }
 }
 
 function parseExpression(expression) {

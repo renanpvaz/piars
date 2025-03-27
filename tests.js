@@ -1,38 +1,38 @@
-test('parses plain text search', parseFilters('thing')[0], {
+test('parses plain text search', parseQuery('thing'), {
   type: 'filter',
   operation: 'match',
   value: 'thing',
 })
 
-test('parses simple filters', parseFilters('repo:thing')[0], {
+test('parses simple filters', parseQuery('repo:thing'), {
   type: 'filter',
   operation: 'equals',
   attribute: 'repo',
   value: 'thing',
 })
 
-test('parses comparison filter', parseFilters('count:>3')[0], {
+test('parses comparison filter', parseQuery('count:>3'), {
   type: 'filter',
   attribute: 'count',
   operation: 'greaterThan',
-  value: '3',
+  value: 3,
 })
 
-test('parses less than filter', parseFilters('count:<1')[0], {
+test('parses less than filter', parseQuery('count:<1'), {
   type: 'filter',
   attribute: 'count',
   operation: 'lessThan',
-  value: '1',
+  value: 1,
 })
 
-test('parses wildcard at start', parseFilters('repo:*eact')[0], {
+test('parses wildcard at start', parseQuery('repo:*eact'), {
   type: 'filter',
   attribute: 'repo',
   operation: 'endsWith',
   value: 'eact',
 })
 
-test('parses wildcard at end', parseFilters('repo:lp*')[0], {
+test('parses wildcard at end', parseQuery('repo:lp*'), {
   type: 'filter',
   attribute: 'repo',
   operation: 'startsWith',
@@ -41,7 +41,7 @@ test('parses wildcard at end', parseFilters('repo:lp*')[0], {
 
 test(
   'supports nested attributes',
-  parseFilters('notification.pullRequest.title:cool')[0],
+  parseQuery('notification.pullRequest.title:cool'),
   {
     type: 'filter',
     attribute: 'notification.pullRequest.title',
@@ -50,110 +50,122 @@ test(
   },
 )
 
-test('supports snake case', parseFilters('pull_request:cool')[0], {
+test('supports snake case', parseQuery('pull_request:cool'), {
   type: 'filter',
   attribute: 'pull_request',
   operation: 'equals',
   value: 'cool',
 })
 
-test('supports NOT operand', parseFilters('NOT repo:react')[0], {
-  type: 'not',
+test('supports NOT operand', parseQuery('NOT repo:react'), {
+  type: 'filter',
+  attribute: 'repo',
+  operation: 'equals',
+  value: 'react',
+  negate: true,
+})
+
+test(
+  'supports NOT followed by group',
+  parseQuery('NOT (repo:react OR repo:vue)'),
+  {
+    type: 'group',
+    negate: true,
+    expression: {
+      type: 'or',
+      expressions: [
+        {
+          type: 'filter',
+          attribute: 'repo',
+          operation: 'equals',
+          value: 'react',
+        },
+        {
+          type: 'filter',
+          attribute: 'repo',
+          operation: 'equals',
+          value: 'vue',
+        },
+      ],
+    },
+  },
+)
+
+test('supports OR operation', parseQuery('repo:one OR repo:two'), {
+  type: 'or',
+  expressions: [
+    { type: 'filter', attribute: 'repo', operation: 'equals', value: 'one' },
+    { type: 'filter', attribute: 'repo', operation: 'equals', value: 'two' },
+  ],
+})
+
+test('parses groups of filters', parseQuery('(repo:test OR author:fulano)'), {
+  type: 'group',
   expression: {
-    type: 'filter',
-    attribute: 'repo',
-    operation: 'equals',
-    value: 'react',
+    type: 'or',
+    expressions: [
+      {
+        type: 'filter',
+        attribute: 'repo',
+        operation: 'equals',
+        value: 'test',
+      },
+      {
+        type: 'filter',
+        attribute: 'author',
+        operation: 'equals',
+        value: 'fulano',
+      },
+    ],
   },
 })
 
-test('supports OR operation', parseFilters('repo:one OR repo:two'), [
+test(
+  'combines grouped expressions',
+  parseQuery('test:1 OR (name:thing AND repo:test)'),
   {
     type: 'or',
     expressions: [
-      { type: 'filter', attribute: 'repo', operation: 'equals', value: 'one' },
-      { type: 'filter', attribute: 'repo', operation: 'equals', value: 'two' },
-    ],
-  },
-])
-
-test(
-  'parses multiple filters',
-  parseFilters('repo:test author:fulano').length,
-  2,
-)
-
-test(
-  'parses groups of filters',
-  parseFilters('(repo:test OR author:fulano)')[0],
-  {
-    type: 'group',
-    expressions: [
       {
-        type: 'or',
-        expressions: [
-          {
-            type: 'filter',
-            attribute: 'repo',
-            operation: 'equals',
-            value: 'test',
-          },
-          {
-            type: 'filter',
-            attribute: 'author',
-            operation: 'equals',
-            value: 'fulano',
-          },
-        ],
+        type: 'filter',
+        attribute: 'test',
+        operation: 'equals',
+        value: 1,
+      },
+      {
+        type: 'group',
+        expression: {
+          type: 'and',
+          expressions: [
+            {
+              type: 'filter',
+              attribute: 'name',
+              operation: 'equals',
+              value: 'thing',
+            },
+            {
+              type: 'filter',
+              attribute: 'repo',
+              operation: 'equals',
+              value: 'test',
+            },
+          ],
+        },
       },
     ],
   },
 )
 
 test(
-  'combines grouped expressions',
-  parseFilters('test:1 OR (name:thing AND repo:test)'),
-  [
-    {
-      type: 'or',
-      expressions: [
-        {
-          type: 'filter',
-          attribute: 'test',
-          operation: 'equals',
-          value: '1',
-        },
-        {
-          type: 'group',
-          expressions: [
-            {
-              type: 'filter',
-              attribute: 'name',
-              operation: 'equals',
-              value: 'thing',
-            },
-            {
-              type: 'filter',
-              attribute: 'repo',
-              operation: 'equals',
-              value: 'test',
-            },
-          ],
-        },
-      ],
-    },
-  ],
-)
-
-test(
   'combines expressions starting with group',
-  parseFilters('(name:thing AND repo:test) OR test:1'),
-  [
-    {
-      type: 'or',
-      expressions: [
-        {
-          type: 'group',
+  parseQuery('(name:thing AND repo:test) OR test:1'),
+  {
+    type: 'or',
+    expressions: [
+      {
+        type: 'group',
+        expression: {
+          type: 'and',
           expressions: [
             {
               type: 'filter',
@@ -169,23 +181,24 @@ test(
             },
           ],
         },
-        {
-          type: 'filter',
-          attribute: 'test',
-          operation: 'equals',
-          value: '1',
-        },
-      ],
-    },
-  ],
+      },
+      {
+        type: 'filter',
+        attribute: 'test',
+        operation: 'equals',
+        value: 1,
+      },
+    ],
+  },
 )
 
 test(
   'parses nested groups',
-  parseFilters('(name:thing AND (repo:test OR repo:test2))'),
-  [
-    {
-      type: 'group',
+  parseQuery('(name:thing AND (repo:test OR repo:test2))'),
+  {
+    type: 'group',
+    expression: {
+      type: 'and',
       expressions: [
         {
           type: 'filter',
@@ -195,48 +208,83 @@ test(
         },
         {
           type: 'group',
-          expressions: [
-            {
-              type: 'or',
-              expressions: [
-                {
-                  type: 'filter',
-                  attribute: 'repo',
-                  operation: 'equals',
-                  value: 'test',
-                },
-                {
-                  type: 'filter',
-                  attribute: 'repo',
-                  operation: 'equals',
-                  value: 'test2',
-                },
-              ],
-            },
-          ],
+          expression: {
+            type: 'or',
+            expressions: [
+              {
+                type: 'filter',
+                attribute: 'repo',
+                operation: 'equals',
+                value: 'test',
+              },
+              {
+                type: 'filter',
+                attribute: 'repo',
+                operation: 'equals',
+                value: 'test2',
+              },
+            ],
+          },
         },
       ],
     },
-  ],
+  },
 )
 
-test('parses inclusion operator', parseFilters('myself IN reviewers'), [
+test(
+  'parses nested groups regardless of order',
+  parseQuery('((repo:test OR repo:test2) AND name:thing)'),
   {
-    type: 'inclusion',
-    expressions: [
-      {
-        type: 'filter',
-        operation: 'match',
-        value: 'myself',
-      },
-      {
-        type: 'filter',
-        operation: 'match',
-        value: 'reviewers',
-      },
-    ],
+    type: 'group',
+    expression: {
+      type: 'and',
+      expressions: [
+        {
+          type: 'group',
+          expression: {
+            type: 'or',
+            expressions: [
+              {
+                type: 'filter',
+                attribute: 'repo',
+                value: 'test',
+                operation: 'equals',
+              },
+              {
+                type: 'filter',
+                attribute: 'repo',
+                value: 'test2',
+                operation: 'equals',
+              },
+            ],
+          },
+        },
+        {
+          type: 'filter',
+          attribute: 'name',
+          value: 'thing',
+          operation: 'equals',
+        },
+      ],
+    },
   },
-])
+)
+
+test('parses inclusion operator', parseQuery('myself IN reviewers'), {
+  type: 'in',
+  expressions: [
+    {
+      type: 'filter',
+      operation: 'match',
+      value: 'myself',
+    },
+    {
+      type: 'filter',
+      operation: 'match',
+      value: 'reviewers',
+    },
+  ],
+})
 
 function test(name, actual, expected) {
   const { equal, left, right } = deepCompare(expected, actual)
@@ -260,7 +308,9 @@ function deepCompare(left, right) {
     if (left.length !== right.length) return fail
 
     const unequal = left
-      .map((element, i) => deepCompare(element, right[i]))
+      .map((element, i) => {
+        return deepCompare(element, right[i])
+      })
       .find((element) => !element.equal)
 
     if (unequal) return unequal
