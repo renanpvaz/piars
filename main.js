@@ -14,6 +14,7 @@ const state = {}
 state.tabs = {
   all: {
     name: 'all',
+    filter: validateFilter(''),
   },
   needsReview: {
     name: 'needsReview',
@@ -65,13 +66,15 @@ function updateTab(newState) {
 function renderSearch() {
   const input = document.createElement('input')
   const { status, expression } = state.tabs[state.selected].filter || {
-    status: 'invalid',
+    status: 'empty',
+    value: true,
+    expression: '',
   }
 
   input.className = 'search'
   input.classList.toggle('search--invalid', status === 'invalid')
   input.type = 'search'
-  input.placeholder = 'search here'
+  input.placeholder = 'javascript expression'
   input.value = expression
   input.oninput = () => {
     const filter = validateFilter(input.value)
@@ -147,6 +150,8 @@ function render(data, container, renderOne) {
 }
 
 function validateFilter(filter) {
+  if (!filter) return { status: 'empty', expression: '', value: true }
+
   return evalFilter(filter, {
     title: '',
     url: '',
@@ -167,9 +172,9 @@ function validateFilter(filter) {
 
 function runFilter(filter, data) {
   return data.filter((element) => {
-    return (
-      filter.status === 'valid' && evalFilter(filter.expression, element).value
-    )
+    return filter.status === 'valid'
+      ? evalFilter(filter.expression, element).value
+      : filter.value
   })
 }
 
@@ -199,7 +204,7 @@ function evalFilter(
       expression: filter,
     }
   } catch (error) {
-    return { status: 'invalid', value: error, expression: filter }
+    return { status: 'invalid', value: false, expression: filter }
   }
 }
 
