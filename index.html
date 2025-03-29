@@ -5,11 +5,52 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>GitHub Assigned Pull Requests</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap"
+        rel="stylesheet" />
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body,
+        .content {
+            height: 100%;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            color: #555;
-            margin: 20px;
+            margin: 0;
+            font-family: 'IBM Plex Sans', sans-serif;
+            font-optical-sizing: auto;
+            font-style: normal;
+            font-variation-settings: 'wdth' 100;
+            color: #191918;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        .header {
+            padding: 32px;
+            background: #e5e5e5;
+            padding-bottom: 62px;
+        }
+
+        .heading {
+            background: inherit;
+            background-clip: text;
+            color: transparent;
+            filter: invert(1);
+        }
+
+        .content {
+            padding: 16px 32px;
+            background: white;
+            border-top: 1px solid;
         }
 
         #results {
@@ -29,11 +70,19 @@
             min-height: 36px;
         }
 
+        .pr__state,
         .pr__details {
-            display: block;
             font-weight: normal;
             font-size: 12px;
             visibility: hidden;
+        }
+
+        .pr__state {
+            margin-left: 4px;
+        }
+
+        .pr__details {
+            display: block;
             margin-top: 4px;
         }
 
@@ -41,6 +90,7 @@
             background: #e9e9e9;
         }
 
+        .pr:hover .pr__state,
         .pr:hover .pr__details {
             visibility: visible;
         }
@@ -84,17 +134,9 @@
         }
 
         .tabs {
-            margin-bottom: 16px;
-        }
-
-        .tabs:after {
-            content: '';
-            display: block;
-            position: absolute;
-            width: 100%;
-            border-bottom: 1px solid;
-            left: 0;
-            z-index: -1;
+            padding: 0 32px;
+            margin-top: -30px;
+            background: transparent;
         }
 
         .tab-button {
@@ -109,7 +151,7 @@
             border-top-right-radius: 3px;
             transform: translateY(1px);
             border-bottom: 1px solid;
-            opacity: 0.4;
+            opacity: 0.6;
         }
 
         .tab-button+.tab-button {
@@ -140,10 +182,14 @@
 </head>
 
 <body>
-    <h1>piars</h1>
+    <header class="header">
+        <h1 class="heading">piars</h1>
+    </header>
     <div class="tabs" id="tabs"></div>
-    <div id="search"></div>
-    <div class="results" id="results"></div>
+    <div class="content">
+        <div id="search"></div>
+        <div class="results" id="results"></div>
+    </div>
     <script src="config.js"></script>
     <script src="github.js"></script>
     <script src="main.js"></script>

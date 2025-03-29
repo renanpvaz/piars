@@ -7,6 +7,7 @@
 // - [ ] polling
 // - [ ] tab number/browser notifications
 // - [ ] add new tab
+// - [ ] mark done
 
 const state = {}
 
@@ -124,11 +125,17 @@ function renderNotification(pr) {
   prItem.href = pr.url
   prItem.target = '_blank'
 
+  const prState = document.createElement('sup')
+
+  prState.className = 'pr__state'
+  prState.textContent = `${pr.state !== 'MERGED' ? pr.reviewDecision : pr.state}`
+
   const details = document.createElement('span')
 
   details.className = 'pr__details'
   details.innerHTML = `author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old `
 
+  prItem.appendChild(prState)
   prItem.appendChild(details)
 
   return prItem
@@ -196,11 +203,56 @@ function evalFilter(
   }
 }
 
+function randomWallpaper() {
+  const wallpapers = [
+    'Brain.png',
+    'Bulge.png',
+    'Burlap.png',
+    'Cirrostratus.png',
+    'Cracked.png',
+    'Crumpled.png',
+    'Dither 1x1.png',
+    'Dither 2x2.png',
+    'Escher Knot.png',
+    'Fabric.png',
+    'Granite.png',
+    'Linen.png',
+    'Luna Pearl.png',
+    'Moorish.png',
+    'Nebula.png',
+    'Rhodo.png',
+    'Rockface.png',
+    'Scales.png',
+    'Scallop.png',
+    'Scatter Blue.png',
+    'Scatter Classic.png',
+    'Scatter Green.png',
+    'Scatter Purple.png',
+    'Scatter.png',
+    'Scribble.png',
+    'Solid.png',
+    'Sprinkle.png',
+    'Swirl.png',
+    'Tide Pool.png',
+    'Verde Marble.png',
+    'Vertigo.png',
+    'Wicker.png',
+  ]
+  const wallpaper = encodeURIComponent(
+    wallpapers[Math.floor(Math.random() * wallpapers.length)],
+  )
+  const url = `https://github.com/rann01/IRIX-tiles/blob/main/IRIX%20tiles/${wallpaper}?raw=true`
+  console.log(url)
+
+  document.querySelector('.header').style.backgroundImage = `url(${url})`
+}
+
 ;(async function init() {
   const notifications = await fetchNotifications().then(
     enrichWithPullRequestData,
   )
 
+  randomWallpaper()
   update({ allNotifications: notifications, notifications })
   render(Object.values(state.tabs), tabsSection, renderTab)
   render([{}], searchSection, renderSearch)
