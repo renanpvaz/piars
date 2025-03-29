@@ -4,50 +4,34 @@
 // - [ ] polling
 // - [ ] tab number/browser notifications
 
-// TODO filters
-// - [x] am I included in reviewers
-//   - needs "IN" operator
-// - have I reviewed this before
-//   - needs approvers data
-// - is this approved/mergeable
-//   - approvers data? or approval status
-
 const state = {}
 
 state.tabs = {
   all: {
     name: 'all',
-    search: '',
-    filters: [],
   },
   needsReview: {
     name: 'needsReview',
-    search: 'NOT state:MERGED AND NOT reviewDecision:APPROVED',
-    filters: parseFilters('NOT state:MERGED AND NOT reviewDecision:APPROVED'),
+    filter: 'state !== "MERGED" && reviewDecision !== "APPROVED"',
   },
   reviewRequested: {
     name: 'reviewRequested',
-    search: 'renanpvaz IN reviewRequests',
-    filters: parseFilters('renanpvaz IN reviewRequests'),
+    filter: 'reviewRequests.includes("renanpvaz")',
   },
   dependabot: {
     name: 'dependabot',
-    search: 'title:Bump*',
-    filters: parseFilters('title:Bump*'),
+    filter: 'title.startsWith("Bump")',
   },
   stale: {
     name: 'stale',
-    search: 'age:>7',
-    filters: parseFilters('age:>7'),
+    filter: 'age > 7',
   },
   big: {
     name: 'big',
-    search: 'changedFiles:>10',
-    filters: parseFilters('changedFiles:>10'),
+    filter: 'changedFiles > 10',
   },
   new: {
     name: '+',
-    search: '',
   },
 }
 
@@ -76,9 +60,9 @@ function renderSearch() {
 
   input.type = 'search'
   input.placeholder = 'search here'
-  input.value = state.tabs[state.selected].search
+  input.value = state.tabs[state.selected].filter
   input.oninput = () => {
-    updateTab({ search: input.value, filters: parseFilters(input.value) })
+    updateTab({ filter: input.value })
   }
 
   return input
@@ -93,7 +77,7 @@ function renderTab(tab) {
   button.onclick = () => {
     update({
       selected: tab.name,
-      notifications: runFilters(tab.filters, state.allNotifications),
+      notifications: runFilter(tab.filter, state.allNotifications),
     })
 
     render(Object.values(state.tabs), tabsSection, renderTab)
