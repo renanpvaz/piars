@@ -106,6 +106,7 @@ function renderTab(tab) {
     render(Object.values(state.tabs), tabsSection, renderTab)
     render([{}], searchSection, renderSearch)
     render(state.notifications, pullRequestSection, renderNotification)
+    renderTitle()
   }
 
   return button
@@ -247,9 +248,12 @@ function randomWallpaper() {
     wallpapers[Math.floor(Math.random() * wallpapers.length)],
   )
   const url = `https://github.com/rann01/IRIX-tiles/blob/main/IRIX%20tiles/${wallpaper}?raw=true`
-  console.log(url)
 
   document.querySelector('.header').style.backgroundImage = `url(${url})`
+}
+
+function renderTitle() {
+  document.title = `piars | ${state.selected} (${state.notifications.length})`
 }
 
 ;(async function init() {
@@ -262,4 +266,5 @@ function randomWallpaper() {
   render(Object.values(state.tabs), tabsSection, renderTab)
   render([{}], searchSection, renderSearch)
   render(state.notifications, pullRequestSection, renderNotification)
+  renderTitle()
 })()
