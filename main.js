@@ -1,8 +1,12 @@
 // TODO:
-// - [ ] typing filter
-// - [ ] filter missing review
+// - [x] typing filter
+// - [x] filter missing review
+// - [ ] update title
+// - [ ] improve PR item
+// - [ ] sorting
 // - [ ] polling
 // - [ ] tab number/browser notifications
+// - [ ] add new tab
 
 const state = {}
 
@@ -12,23 +16,25 @@ state.tabs = {
   },
   needsReview: {
     name: 'needsReview',
-    filter: 'state !== "MERGED" && reviewDecision !== "APPROVED"',
+    filter: validateFilter(
+      'state !== "MERGED" && reviewDecision !== "APPROVED"',
+    ),
   },
   reviewRequested: {
     name: 'reviewRequested',
-    filter: 'reviewRequests.includes("renanpvaz")',
+    filter: validateFilter('reviewRequests.includes("renanpvaz")'),
   },
   dependabot: {
     name: 'dependabot',
-    filter: 'title.startsWith("Bump")',
+    filter: validateFilter('title.startsWith("Bump")'),
   },
   stale: {
     name: 'stale',
-    filter: 'age > 7',
+    filter: validateFilter('age > 7'),
   },
   big: {
     name: 'big',
-    filter: 'changedFiles > 10',
+    filter: validateFilter('changedFiles > 10'),
   },
   new: {
     name: '+',
@@ -57,12 +63,25 @@ function updateTab(newState) {
 
 function renderSearch() {
   const input = document.createElement('input')
+  const { status, expression } = state.tabs[state.selected].filter || {
+    status: 'invalid',
+  }
 
+  input.className = 'search'
+  input.classList.toggle('search--invalid', status === 'invalid')
   input.type = 'search'
   input.placeholder = 'search here'
-  input.value = state.tabs[state.selected].filter
+  input.value = expression
   input.oninput = () => {
-    updateTab({ filter: input.value })
+    const filter = validateFilter(input.value)
+
+    updateTab({ filter })
+    update({
+      notifications: runFilter(filter, state.allNotifications),
+    })
+
+    render(state.notifications, pullRequestSection, renderNotification)
+    input.classList.toggle('search--invalid', filter.status === 'invalid')
   }
 
   return input
@@ -89,38 +108,92 @@ function renderTab(tab) {
 }
 
 function renderNotification(pr) {
-  // TODO: return more than one and flatmap
-  // OR group by repo
-  // if (!document.getElementById(repoName)) {
-  //     const repo = document.createElement('h2')
+  const prItem = document.createElement('a')
+  prItem.className = 'pr'
 
-  //     repo.id = repoName
-  //     repo.textContent = repoName
+  prItem.classList.toggle('pr--merged', pr.state === 'MERGED')
+  prItem.classList.toggle('pr--approved', pr.reviewDecision === 'APPROVED')
+  prItem.classList.toggle('pr--draft', pr.draft)
+  prItem.classList.toggle('pr--closed', pr.state === 'CLOSED')
+  prItem.classList.toggle(
+    'pr--reviewed',
+    pr.unread && pr.reviewDecision === 'APPROVED',
+  )
 
-  //     resultsDiv.append(repo)
-  // }
+  prItem.textContent = pr.title
+  prItem.href = pr.url
+  prItem.target = '_blank'
 
-  const prDiv = document.createElement('div')
-  prDiv.className = 'pr'
+  const details = document.createElement('span')
 
-  const title = document.createElement('div')
-  title.className = 'pr-title'
-  title.textContent = pr.title
+  details.className = 'pr__details'
+  details.innerHTML = `author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old `
 
-  const link = document.createElement('a')
-  link.href = pr.url
-  link.textContent = 'View on GitHub'
-  link.target = '_blank'
+  prItem.appendChild(details)
 
-  prDiv.appendChild(title)
-  prDiv.appendChild(link)
-
-  return prDiv
+  return prItem
 }
 
 function render(data, container, renderOne) {
   const children = data.map(renderOne)
   container.replaceChildren(...children)
+}
+
+function validateFilter(filter) {
+  return evalFilter(filter, {
+    title: '',
+    url: '',
+    unread: false,
+    updatedAt: '',
+    reason: '',
+    repository: '',
+    repositoryFullName: '',
+    reviewRequests: [],
+    author: '',
+    reviewDecision: '',
+    state: '',
+    draft: false,
+    age: 0,
+    changedFiles: 0,
+  })
+}
+
+function runFilter(filter, data) {
+  return data.filter((element) => {
+    return (
+      filter.status === 'valid' && evalFilter(filter.expression, element).value
+    )
+  })
+}
+
+function evalFilter(
+  filter,
+  {
+    title,
+    url,
+    unread,
+    updatedAt,
+    reason,
+    repository,
+    repositoryFullName,
+    reviewRequests,
+    author,
+    reviewDecision,
+    state,
+    draft,
+    age,
+    changedFiles,
+  },
+) {
+  try {
+    return {
+      status: 'valid',
+      value: filter ? eval(filter) || false : true,
+      expression: filter,
+    }
+  } catch (error) {
+    return { status: 'invalid', value: error, expression: filter }
+  }
 }
 
 ;(async function init() {
