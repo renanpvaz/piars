@@ -168,15 +168,42 @@
         }
 
         .search {
-            font-size: 16px;
+            display: flex;
+            border: 1px solid;
             width: 600px;
-            padding: 8px;
-            font-family: monospace;
-            outline: 0;
+            border-radius: 3px;
         }
 
-        .search--invalid {
-            box-shadow: 0 0 0 2px #ff00007a;
+        .search::before {
+            content: '';
+            display: inline-block;
+            color: inherit;
+            height: 100%;
+            font-size: 11px;
+            line-height: 2;
+            padding: 6px;
+            vertical-align: middle;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .search--javascript::before {
+            content: 'JS';
+            background: #d1ad28;
+        }
+
+        .search--text::before {
+            content: 'TEXT';
+            background: #cfcdc5;
+        }
+
+        .searchbar {
+            flex: 1;
+            font-size: 16px;
+            padding: 6px 8px;
+            font-family: monospace;
+            outline: 0;
+            border: 0;
         }
     </style>
 </head>
@@ -187,7 +214,7 @@
     </header>
     <div class="tabs" id="tabs"></div>
     <div class="content">
-        <div id="search"></div>
+        <div class="search"></div>
         <div class="results" id="results"></div>
     </div>
     <script src="config.js"></script>

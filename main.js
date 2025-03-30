@@ -1,13 +1,13 @@
 // TODO:
 // - [x] typing filter
 // - [x] filter missing review
-// - [ ] update title
-// - [ ] improve PR item
+// - [x] update title
+// - [x] improve PR item
 // - [ ] sorting
 // - [ ] polling
 // - [ ] tab number/browser notifications
 // - [ ] add new tab
-// - [ ] mark done
+// - [/] mark done
 
 const state = {}
 
@@ -45,10 +45,6 @@ state.tabs = {
 
 state.selected = 'all'
 
-const tabsSection = document.querySelector('#tabs')
-const searchSection = document.querySelector('#search')
-const pullRequestSection = document.querySelector('#results')
-
 function update(newState) {
   Object.assign(state, newState)
   console.log({ ...state })
@@ -64,17 +60,16 @@ function updateTab(newState) {
 }
 
 function renderSearch() {
-  const input = document.createElement('input')
-  const { status, expression } = state.tabs[state.selected].filter || {
-    status: 'empty',
-    value: true,
-    expression: '',
-  }
+  const { type, expression } = state.tabs[state.selected].filter
+  const container = document.createElement('div')
 
-  input.className = 'search'
-  input.classList.toggle('search--invalid', status === 'invalid')
+  container.className = `search search--${type}`
+
+  const input = document.createElement('input')
+
+  input.className = `searchbar`
   input.type = 'search'
-  input.placeholder = 'javascript expression'
+  input.placeholder = 'query or javascript expression'
   input.value = expression
   input.oninput = () => {
     const filter = validateFilter(input.value)
@@ -84,11 +79,13 @@ function renderSearch() {
       notifications: runFilter(filter, state.allNotifications),
     })
 
-    render(state.notifications, pullRequestSection, renderNotification)
-    input.classList.toggle('search--invalid', filter.status === 'invalid')
+    renderMany(state.notifications, '#results', renderNotification)
+    container.className = `search search--${filter.type}`
   }
 
-  return input
+  container.appendChild(input)
+
+  return container
 }
 
 function renderTab(tab) {
@@ -103,9 +100,9 @@ function renderTab(tab) {
       notifications: runFilter(tab.filter, state.allNotifications),
     })
 
-    render(Object.values(state.tabs), tabsSection, renderTab)
-    render([{}], searchSection, renderSearch)
-    render(state.notifications, pullRequestSection, renderNotification)
+    renderMany(Object.values(state.tabs), '#tabs', renderTab)
+    render('.search', renderSearch)
+    renderMany(state.notifications, '#results', renderNotification)
     renderTitle()
   }
 
@@ -145,14 +142,17 @@ function renderNotification(pr) {
   return prItem
 }
 
-function render(data, container, renderOne) {
+function renderMany(data, query, renderOne) {
   const children = data.map(renderOne)
-  container.replaceChildren(...children)
+  document.querySelector(query).replaceChildren(...children)
+}
+
+function render(query, renderOne) {
+  const newContainer = renderOne()
+  document.querySelector(query).replaceWith(newContainer)
 }
 
 function validateFilter(filter) {
-  if (!filter) return { status: 'empty', expression: '', value: true }
-
   return evalFilter(filter, {
     title: '',
     url: '',
@@ -172,11 +172,7 @@ function validateFilter(filter) {
 }
 
 function runFilter(filter, data) {
-  return data.filter((element) => {
-    return filter.status === 'valid'
-      ? evalFilter(filter.expression, element).value
-      : filter.value
-  })
+  return data.filter((element) => evalFilter(filter.expression, element).value)
 }
 
 function evalFilter(
@@ -198,14 +194,25 @@ function evalFilter(
     changedFiles,
   },
 ) {
+  if (!filter)
+    return {
+      type: 'text',
+      value: true,
+      expression: '',
+    }
+
   try {
     return {
-      status: 'valid',
+      type: 'javascript',
       value: filter ? eval(filter) || false : true,
       expression: filter,
     }
   } catch (error) {
-    return { status: 'invalid', value: false, expression: filter }
+    return {
+      type: 'text',
+      value: title.includes(filter),
+      expression: filter,
+    }
   }
 }
 
@@ -249,7 +256,8 @@ function randomWallpaper() {
   )
   const url = `https://github.com/rann01/IRIX-tiles/blob/main/IRIX%20tiles/${wallpaper}?raw=true`
 
-  document.querySelector('.header').style.backgroundImage = `url(${url})`
+  document.querySelector('.header').style.backgroundImage =
+    `linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7) ), url(${url})`
 }
 
 function renderTitle() {
@@ -257,14 +265,15 @@ function renderTitle() {
 }
 
 ;(async function init() {
+  randomWallpaper()
+  renderMany(Object.values(state.tabs), '#tabs', renderTab)
+  render('.search', renderSearch)
+
   const notifications = await fetchNotifications().then(
     enrichWithPullRequestData,
   )
 
-  randomWallpaper()
   update({ allNotifications: notifications, notifications })
-  render(Object.values(state.tabs), tabsSection, renderTab)
-  render([{}], searchSection, renderSearch)
-  render(state.notifications, pullRequestSection, renderNotification)
+  renderMany(state.notifications, '#results', renderNotification)
   renderTitle()
 })()
