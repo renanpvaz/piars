@@ -22,6 +22,8 @@
         }
 
 
+
+
         * {
             margin: 0;
             padding: 0;
@@ -41,6 +43,20 @@
             font-style: normal;
             font-variation-settings: 'wdth' 100;
             color: #191918;
+        }
+
+        .debug * {
+            animation: debug .5s
+        }
+
+        @keyframes debug {
+            from {
+                outline: 3px solid red;
+            }
+
+            to {
+                outline: 3px solid transparent;
+            }
         }
 
         button {
@@ -93,7 +109,7 @@
             border-top: 1px solid;
         }
 
-        #results {
+        .results {
             margin-top: 20px;
         }
 
@@ -273,10 +289,12 @@
     <header class="header">
         <h1 class="heading">piars</h1>
     </header>
-    <div class="tabs" id="tabs"></div>
+    <div class="tabs"></div>
     <div class="content">
-        <div class="search"></div>
-        <div class="results" id="results">
+        <div class="search search--text">
+            <input class="searchbar" type="search" placeholder="query or javascript expression">
+        </div>
+        <div class="results">
             <span>Counting all the nits...</span>
         </div>
         <div class="instructions">
@@ -311,6 +329,7 @@
         </div>
     </div>
     <script src="github.js"></script>
+    <script src="view.js"></script>
     <script src="main.js"></script>
 </body>
 
