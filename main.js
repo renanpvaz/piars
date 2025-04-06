@@ -3,6 +3,7 @@
 // - [x] filter missing review
 // - [x] update title
 // - [x] improve PR item
+// - [ ] eval js in web worker
 // - [ ] sorting
 // - [ ] polling
 // - [ ] tab number/browser notifications
@@ -21,10 +22,6 @@ state.tabs = {
     filter: validateFilter(
       'state !== "MERGED" && reviewDecision !== "APPROVED"',
     ),
-  },
-  reviewRequested: {
-    name: 'reviewRequested',
-    filter: validateFilter('reviewRequests.includes("renanpvaz")'),
   },
   dependabot: {
     name: 'dependabot',
@@ -79,7 +76,7 @@ function renderSearch() {
       notifications: runFilter(filter, state.allNotifications),
     })
 
-    renderMany(state.notifications, '#results', renderNotification)
+    renderMany('#results', state.notifications, renderNotification)
     container.className = `search search--${filter.type}`
   }
 
@@ -100,9 +97,9 @@ function renderTab(tab) {
       notifications: runFilter(tab.filter, state.allNotifications),
     })
 
-    renderMany(Object.values(state.tabs), '#tabs', renderTab)
+    renderMany('#tabs', Object.values(state.tabs), renderTab)
     render('.search', renderSearch)
-    renderMany(state.notifications, '#results', renderNotification)
+    renderMany('#results', state.notifications, renderNotification)
     renderTitle()
   }
 
@@ -142,7 +139,7 @@ function renderNotification(pr) {
   return prItem
 }
 
-function renderMany(data, query, renderOne) {
+function renderMany(query, data, renderOne) {
   const children = data.map(renderOne)
   document.querySelector(query).replaceChildren(...children)
 }
@@ -216,64 +213,21 @@ function evalFilter(
   }
 }
 
-function randomWallpaper() {
-  const wallpapers = [
-    'Brain.png',
-    'Bulge.png',
-    'Burlap.png',
-    'Cirrostratus.png',
-    'Cracked.png',
-    'Crumpled.png',
-    'Dither 1x1.png',
-    'Dither 2x2.png',
-    'Escher Knot.png',
-    'Fabric.png',
-    'Granite.png',
-    'Linen.png',
-    'Luna Pearl.png',
-    'Moorish.png',
-    'Nebula.png',
-    'Rhodo.png',
-    'Rockface.png',
-    'Scales.png',
-    'Scallop.png',
-    'Scatter Blue.png',
-    'Scatter Classic.png',
-    'Scatter Green.png',
-    'Scatter Purple.png',
-    'Scatter.png',
-    'Scribble.png',
-    'Solid.png',
-    'Sprinkle.png',
-    'Swirl.png',
-    'Tide Pool.png',
-    'Verde Marble.png',
-    'Vertigo.png',
-    'Wicker.png',
-  ]
-  const wallpaper = encodeURIComponent(
-    wallpapers[Math.floor(Math.random() * wallpapers.length)],
-  )
-  const url = `https://github.com/rann01/IRIX-tiles/blob/main/IRIX%20tiles/${wallpaper}?raw=true`
-
-  document.querySelector('.header').style.backgroundImage =
-    `linear-gradient( rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7) ), url(${url})`
-}
-
 function renderTitle() {
   document.title = `piars | ${state.selected} (${state.notifications.length})`
 }
 
 ;(async function init() {
-  randomWallpaper()
-  renderMany(Object.values(state.tabs), '#tabs', renderTab)
+  renderMany('#tabs', Object.values(state.tabs), renderTab)
   render('.search', renderSearch)
 
   const notifications = await fetchNotifications().then(
     enrichWithPullRequestData,
   )
 
+  notifications.sort((a, b) => a.updatedAt - b.updatedAt)
+
   update({ allNotifications: notifications, notifications })
-  renderMany(state.notifications, '#results', renderNotification)
+  renderMany('#results', state.notifications, renderNotification)
   renderTitle()
 })()

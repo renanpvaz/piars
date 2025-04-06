@@ -142,7 +142,7 @@ function toEntry(notification, pullRequest) {
     title: notification.subject.title,
     url: `https:github.com/${notification.repository.full_name}/pull/${pullRequest.number}`,
     unread: notification.unread,
-    updatedAt: notification.updatedAt,
+    updatedAt: new Date(notification.updated_at).getTime(),
     reason: notification.reason,
     repository: notification.repository.name,
     repositoryFullName: notification.repository.full_name,
