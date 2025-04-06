@@ -1,24 +1,19 @@
 async function fetchNotifications() {
   const url = `https://api.github.com/notifications?all=true`
-  const cache = sessionStorage.getItem('notification_data')
-  let data = cache && JSON.parse(cache)
 
   try {
-    if (!data) {
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `token ${GITHUB_TOKEN}`,
-          Accept: 'application/vnd.github.v3+json',
-        },
-      })
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `token ${GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github.v3+json',
+      },
+    })
 
-      if (!response.ok) {
-        throw new Error(`GitHub API error: ${response.statusText}`)
-      }
-
-      data = await response.json()
-      sessionStorage.setItem('notification_data', JSON.stringify(data))
+    if (!response.ok) {
+      throw new Error(`GitHub API error: ${response.statusText}`)
     }
+
+    data = await response.json()
 
     return data
   } catch (error) {
@@ -27,11 +22,7 @@ async function fetchNotifications() {
   }
 }
 
-async function fetchPullRequests(reposAndPRs) {
-  const cached = sessionStorage.getItem('pr_data')
-
-  if (cached) return JSON.parse(cached)
-
+function buildPRQuery(reposAndPRs) {
   const queryParts = reposAndPRs.map(
     ({ owner, repo, number }, index) => `
         pr${index}: repository(owner: "${owner}", name: "${repo}") {
@@ -73,12 +64,14 @@ async function fetchPullRequests(reposAndPRs) {
       `,
   )
 
-  const query = `
+  return `
         query {
           ${queryParts.join('\n')}
         }
       `
+}
 
+async function fetchPullRequests(query) {
   try {
     const response = await fetch('https://api.github.com/graphql', {
       method: 'POST',
@@ -94,8 +87,6 @@ async function fetchPullRequests(reposAndPRs) {
     }
 
     const data = await response.json()
-
-    sessionStorage.setItem('pr_data', JSON.stringify(data))
 
     return data
   } catch (error) {
@@ -113,7 +104,8 @@ async function enrichWithPullRequestData(notifications) {
     number: +n.subject.url.split('/').pop(),
   }))
 
-  const { data } = await fetchPullRequests(pullRequests)
+  const query = buildPRQuery(pullRequests)
+  const { data } = await fetchPullRequests(query)
 
   const pullsPerRepo = Object.values(data).reduce((acc, { pullRequest }) => {
     if (!pullRequest) return acc
@@ -135,6 +127,15 @@ async function enrichWithPullRequestData(notifications) {
 
     return toEntry(n, pullRequest)
   })
+}
+
+function pollNotifications(callback) {
+  const cb = () => {
+    fetchNotifications().then(enrichWithPullRequestData).then(callback)
+  }
+
+  cb()
+  setInterval(cb, 1000 * 30)
 }
 
 function toEntry(notification, pullRequest) {

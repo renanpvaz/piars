@@ -3,8 +3,8 @@
 // - [x] filter missing review
 // - [x] update title
 // - [x] improve PR item
+// - [x] sorting
 // - [ ] eval js in web worker
-// - [ ] sorting
 // - [ ] polling
 // - [ ] tab number/browser notifications
 // - [ ] add new tab
@@ -221,13 +221,17 @@ function renderTitle() {
   renderMany('#tabs', Object.values(state.tabs), renderTab)
   render('.search', renderSearch)
 
-  const notifications = await fetchNotifications().then(
-    enrichWithPullRequestData,
-  )
+  pollNotifications((notifications) => {
+    notifications.sort((a, b) => a.updatedAt - b.updatedAt)
 
-  notifications.sort((a, b) => a.updatedAt - b.updatedAt)
-
-  update({ allNotifications: notifications, notifications })
-  renderMany('#results', state.notifications, renderNotification)
-  renderTitle()
+    update({
+      allNotifications: notifications,
+      notifications: runFilter(
+        state.tabs[state.selected].filter,
+        notifications,
+      ),
+    })
+    renderMany('#results', state.notifications, renderNotification)
+    renderTitle()
+  })
 })()
