@@ -1,7 +1,7 @@
 // TODO:
 // - mvp
 //   - [x] input github token
-//   - [ ] eval js in web worker
+//   - [x] eval js in web worker
 //   - [ ] view schema
 //   - [ ] error messages?
 // - ideas
@@ -10,28 +10,27 @@
 //   - [ ] add new tab
 
 const initialState = {
+  allNotifications: [],
   tabs: {
     all: {
       name: 'all',
-      filter: validateFilter(''),
+      query: '',
     },
     needsReview: {
       name: 'needsReview',
-      filter: validateFilter(
-        'state !== "MERGED" && reviewDecision !== "APPROVED"',
-      ),
+      query: 'state !== "MERGED" && reviewDecision !== "APPROVED"',
     },
     dependabot: {
       name: 'dependabot',
-      filter: validateFilter('title.startsWith("Bump")'),
+      query: 'title.startsWith("Bump")',
     },
     stale: {
       name: 'stale',
-      filter: validateFilter('age > 7'),
+      query: 'age > 7',
     },
     big: {
       name: 'big',
-      filter: validateFilter('changedFiles > 10'),
+      query: 'changedFiles > 10',
     },
     new: {
       name: '+',
@@ -41,7 +40,7 @@ const initialState = {
 }
 
 const state = loadPreviousState() || initialState
-console.log(state)
+let worker
 
 function loadPreviousState() {
   let cachedState
@@ -79,15 +78,8 @@ function renderSearch() {
   input.placeholder = 'query or javascript expression'
   input.value = expression
   input.oninput = () => {
-    const filter = validateFilter(input.value)
-
-    updateTab({ filter })
-    update({
-      notifications: runFilter(filter, state.allNotifications),
-    })
-
-    renderMany('#results', state.notifications, renderNotification)
-    container.className = `search search--${filter.type}`
+    updateTab({ query: input.value })
+    runCurrentFilter()
   }
 
   container.appendChild(input)
@@ -102,15 +94,9 @@ function renderTab(tab) {
   button.textContent = tab.name
   button.classList.toggle('tab-button--selected', tab.name === state.selected)
   button.onclick = () => {
-    update({
-      selected: tab.name,
-      notifications: runFilter(tab.filter, state.allNotifications),
-    })
-
+    update({ selected: tab.name })
     renderMany('#tabs', Object.values(state.tabs), renderTab)
-    render('.search', renderSearch)
-    renderMany('#results', state.notifications, renderNotification)
-    renderTitle()
+    runCurrentFilter()
   }
 
   return button
@@ -159,68 +145,22 @@ function render(query, renderOne) {
   document.querySelector(query).replaceWith(newContainer)
 }
 
-function validateFilter(filter) {
-  return evalFilter(filter, {
-    title: '',
-    url: '',
-    unread: false,
-    updatedAt: '',
-    reason: '',
-    repository: '',
-    repositoryFullName: '',
-    reviewRequests: [],
-    author: '',
-    reviewDecision: '',
-    state: '',
-    draft: false,
-    age: 0,
-    changedFiles: 0,
+function runCurrentFilter() {
+  getWorker().postMessage({
+    type: 'filter',
+    value: state.allNotifications,
+    filter: state.tabs[state.selected].query,
   })
 }
 
-function runFilter(filter, data) {
-  return data.filter((element) => evalFilter(filter.expression, element).value)
-}
+function getWorker() {
+  if (!window.Worker) return
 
-function evalFilter(
-  filter,
-  {
-    title,
-    url,
-    unread,
-    updatedAt,
-    reason,
-    repository,
-    repositoryFullName,
-    reviewRequests,
-    author,
-    reviewDecision,
-    state,
-    draft,
-    age,
-    changedFiles,
-  },
-) {
-  if (!filter)
-    return {
-      type: 'text',
-      value: true,
-      expression: '',
-    }
-
-  try {
-    return {
-      type: 'javascript',
-      value: filter ? eval(filter) || false : true,
-      expression: filter,
-    }
-  } catch (error) {
-    return {
-      type: 'text',
-      value: title.includes(filter),
-      expression: filter,
-    }
+  if (!worker) {
+    worker = new Worker('worker.js')
   }
+
+  return worker
 }
 
 function renderTitle() {
@@ -231,31 +171,43 @@ function updateToken(token) {
   state.accessToken = token
 }
 
-function renderNotifications(notifications) {
-  notifications.sort((a, b) => a.updatedAt - b.updatedAt)
-
-  update({
-    allNotifications: notifications,
-    notifications: runFilter(state.tabs[state.selected].filter, notifications),
-  })
+function updateNotifications(notifications) {
+  update({ notifications })
   renderMany('#results', state.notifications, renderNotification)
   renderTitle()
 }
 
 function startPolling() {
   document.querySelector('.instructions').remove()
-  pollNotifications(state.accessToken, renderNotifications)
+  pollNotifications(state.accessToken, (notifications) => {
+    notifications.sort((a, b) => a.updatedAt - b.updatedAt)
+
+    update({ allNotifications: notifications })
+    runCurrentFilter()
+  })
 }
 
 ;(async function init() {
   renderMany('#tabs', Object.values(state.tabs), renderTab)
-  render('.search', renderSearch)
 
   if (state.accessToken) {
     startPolling()
   }
 
   if (state.allNotifications.length) {
-    renderNotifications(state.allNotifications)
+    runCurrentFilter()
+  }
+
+  getWorker().onmessage = (e) => {
+    switch (e.data.type) {
+      case 'filter':
+        const { filter, value } = e.data
+
+        updateTab({ filter })
+        updateNotifications(value)
+        render('.search', renderSearch)
+
+        break
+    }
   }
 })()
