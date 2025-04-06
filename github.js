@@ -1,10 +1,10 @@
-async function fetchNotifications() {
+async function fetchNotifications(token) {
   const url = `https://api.github.com/notifications?all=true`
 
   try {
     const response = await fetch(url, {
       headers: {
-        Authorization: `token ${GITHUB_TOKEN}`,
+        Authorization: `token ${token}`,
         Accept: 'application/vnd.github.v3+json',
       },
     })
@@ -18,7 +18,6 @@ async function fetchNotifications() {
     return data
   } catch (error) {
     console.error('Error fetching data:', error)
-    alert('Failed to fetch pull requests. Check the console for details.')
   }
 }
 
@@ -71,12 +70,12 @@ function buildPRQuery(reposAndPRs) {
       `
 }
 
-async function fetchPullRequests(query) {
+async function fetchPullRequests(token, query) {
   try {
     const response = await fetch('https://api.github.com/graphql', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ query }),
@@ -94,7 +93,7 @@ async function fetchPullRequests(query) {
   }
 }
 
-async function enrichWithPullRequestData(notifications) {
+async function enrichWithPullRequestData(token, notifications) {
   const prNotifications = notifications.filter(
     (n) => n.subject.type === 'PullRequest',
   )
@@ -105,7 +104,7 @@ async function enrichWithPullRequestData(notifications) {
   }))
 
   const query = buildPRQuery(pullRequests)
-  const { data } = await fetchPullRequests(query)
+  const { data } = await fetchPullRequests(token, query)
 
   const pullsPerRepo = Object.values(data).reduce((acc, { pullRequest }) => {
     if (!pullRequest) return acc
@@ -129,9 +128,13 @@ async function enrichWithPullRequestData(notifications) {
   })
 }
 
-function pollNotifications(callback) {
+function pollNotifications(accessToken, callback) {
   const cb = () => {
-    fetchNotifications().then(enrichWithPullRequestData).then(callback)
+    fetchNotifications(accessToken)
+      .then((notifications) =>
+        enrichWithPullRequestData(accessToken, notifications),
+      )
+      .then(callback)
   }
 
   cb()

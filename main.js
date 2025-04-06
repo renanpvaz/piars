@@ -1,50 +1,60 @@
 // TODO:
-// - [x] typing filter
-// - [x] filter missing review
-// - [x] update title
-// - [x] improve PR item
-// - [x] sorting
-// - [ ] eval js in web worker
-// - [ ] polling
-// - [ ] tab number/browser notifications
-// - [ ] add new tab
-// - [/] mark done
+// - mvp
+//   - [x] input github token
+//   - [ ] eval js in web worker
+//   - [ ] view schema
+//   - [ ] error messages?
+// - ideas
+//   - [ ] settings page: poll interval, theme, wallpaper, token
+//   - [ ] browser notifications
+//   - [ ] add new tab
 
-const state = {}
-
-state.tabs = {
-  all: {
-    name: 'all',
-    filter: validateFilter(''),
+const initialState = {
+  tabs: {
+    all: {
+      name: 'all',
+      filter: validateFilter(''),
+    },
+    needsReview: {
+      name: 'needsReview',
+      filter: validateFilter(
+        'state !== "MERGED" && reviewDecision !== "APPROVED"',
+      ),
+    },
+    dependabot: {
+      name: 'dependabot',
+      filter: validateFilter('title.startsWith("Bump")'),
+    },
+    stale: {
+      name: 'stale',
+      filter: validateFilter('age > 7'),
+    },
+    big: {
+      name: 'big',
+      filter: validateFilter('changedFiles > 10'),
+    },
+    new: {
+      name: '+',
+    },
   },
-  needsReview: {
-    name: 'needsReview',
-    filter: validateFilter(
-      'state !== "MERGED" && reviewDecision !== "APPROVED"',
-    ),
-  },
-  dependabot: {
-    name: 'dependabot',
-    filter: validateFilter('title.startsWith("Bump")'),
-  },
-  stale: {
-    name: 'stale',
-    filter: validateFilter('age > 7'),
-  },
-  big: {
-    name: 'big',
-    filter: validateFilter('changedFiles > 10'),
-  },
-  new: {
-    name: '+',
-  },
+  selected: 'all',
 }
 
-state.selected = 'all'
+const state = loadPreviousState() || initialState
+console.log(state)
+
+function loadPreviousState() {
+  let cachedState
+  try {
+    cachedState = JSON.parse(localStorage.getItem('piarsState'))
+  } catch {}
+
+  return cachedState
+}
 
 function update(newState) {
   Object.assign(state, newState)
-  console.log({ ...state })
+  localStorage.setItem('piarsState', JSON.stringify(state))
 }
 
 function updateTab(newState) {
@@ -217,21 +227,35 @@ function renderTitle() {
   document.title = `piars | ${state.selected} (${state.notifications.length})`
 }
 
+function updateToken(token) {
+  state.accessToken = token
+}
+
+function renderNotifications(notifications) {
+  notifications.sort((a, b) => a.updatedAt - b.updatedAt)
+
+  update({
+    allNotifications: notifications,
+    notifications: runFilter(state.tabs[state.selected].filter, notifications),
+  })
+  renderMany('#results', state.notifications, renderNotification)
+  renderTitle()
+}
+
+function startPolling() {
+  document.querySelector('.instructions').remove()
+  pollNotifications(state.accessToken, renderNotifications)
+}
+
 ;(async function init() {
   renderMany('#tabs', Object.values(state.tabs), renderTab)
   render('.search', renderSearch)
 
-  pollNotifications((notifications) => {
-    notifications.sort((a, b) => a.updatedAt - b.updatedAt)
+  if (state.accessToken) {
+    startPolling()
+  }
 
-    update({
-      allNotifications: notifications,
-      notifications: runFilter(
-        state.tabs[state.selected].filter,
-        notifications,
-      ),
-    })
-    renderMany('#results', state.notifications, renderNotification)
-    renderTitle()
-  })
+  if (state.allNotifications.length) {
+    renderNotifications(state.allNotifications)
+  }
 })()
