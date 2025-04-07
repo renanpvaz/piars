@@ -144,7 +144,7 @@ function pollNotifications(accessToken, callback) {
 function toEntry(notification, pullRequest) {
   return {
     title: notification.subject.title,
-    url: `https:github.com/${notification.repository.full_name}/pull/${pullRequest.number}`,
+    url: `https://github.com/${notification.repository.full_name}/pull/${pullRequest.number}`,
     unread: notification.unread,
     updatedAt: new Date(notification.updated_at).getTime(),
     reason: notification.reason,
