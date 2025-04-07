@@ -2,15 +2,25 @@ function render(changes) {
   if ('tabs' in changes || 'selected' in changes)
     renderMany('.tabs', Object.values(state.tabs), renderTab)
 
+  if ('selected' in changes && state.selected === 'config') renderConfig()
+
   if ('notifications' in changes)
     renderMany('.results', state.notifications, renderNotification)
 
   if ('filter' in changes) renderSearch(document.querySelector('.search'))
 
-  if (state.accessToken)
-    document.querySelector('.instructions').style.display = 'none'
+  if (state.accessToken) hideInstructions()
+
+  document
+    .querySelector('.content')
+    .classList.toggle('content--config', state.selected === 'config')
 
   renderTitle()
+}
+
+function hideInstructions() {
+  const container = document.querySelector('.instructions')
+  if (container) container.style.display = 'none'
 }
 
 function renderSearch(container) {
@@ -40,7 +50,7 @@ function renderTab(tab) {
   button.classList.toggle('tab-button--selected', tab.name === state.selected)
   button.onclick = () => {
     update({ selected: tab.name })
-    runCurrentFilter()
+    if (tab.type == 'pulls') runCurrentFilter()
   }
 
   return button
@@ -77,6 +87,30 @@ function renderNotification(pr) {
   prItem.appendChild(details)
 
   return prItem
+}
+
+function renderConfig() {
+  const container =
+    document.querySelector('.config') || document.createElement('div')
+  const input = document.createElement('textarea')
+
+  input.className = 'config'
+  input.value = JSON.stringify(state.settings, null, 2)
+  input.rows = 10
+  input.onchange = () => {
+    try {
+      const newConfig = JSON.parse(input.value)
+      update({ settings: newConfig })
+      input.classList.remove('config--invalid')
+    } catch {
+      input.classList.add('config--invalid')
+    }
+  }
+
+  container.appendChild(input)
+  document.querySelector('.content').appendChild(container)
+
+  return container
 }
 
 function renderMany(query, data, callback) {

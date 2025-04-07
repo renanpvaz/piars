@@ -17,22 +17,28 @@ const initialState = {
   allNotifications: [],
   tabs: {
     all: {
+      type: 'pulls',
       name: 'all',
     },
     needsReview: {
+      type: 'pulls',
       name: 'needsReview',
     },
     dependabot: {
+      type: 'pulls',
       name: 'dependabot',
     },
     stale: {
+      type: 'pulls',
       name: 'stale',
     },
     big: {
+      type: 'pulls',
       name: 'big',
     },
-    new: {
-      name: '+',
+    config: {
+      type: 'config',
+      name: 'config',
     },
   },
   query: {
@@ -43,6 +49,12 @@ const initialState = {
   },
   selected: 'all',
   notifications: [],
+  settings: {
+    theme: 'light',
+    debug: false,
+    pollIntervalMili: 1000 * 30,
+    wallpaperUrl: '',
+  },
 }
 
 const state = {}
@@ -91,7 +103,7 @@ function getWorker() {
   return worker
 }
 
-function updateToken(token) {
+function setToken(token) {
   state.accessToken = token
 }
 

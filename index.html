@@ -21,9 +21,6 @@
             --dark-gray: #5f5f5f;
         }
 
-
-
-
         * {
             margin: 0;
             padding: 0;
@@ -107,6 +104,15 @@
             padding: 16px 32px;
             background: white;
             border-top: 1px solid;
+        }
+
+        .content--config .config {
+            display: block;
+        }
+
+        .content--config .search,
+        .content--config .results {
+            display: none;
         }
 
         .results {
@@ -282,6 +288,17 @@
             display: flex;
             margin-bottom: 8px;
         }
+
+        .config {
+            display: none;
+            width: 600px;
+            padding: 16px;
+            font-size: 14px;
+        }
+
+        .config--invalid {
+            border-color: var(--accent-red)
+        }
     </style>
 </head>
 
@@ -300,7 +317,7 @@
         <div class="instructions">
             <div class="instructions__form">
                 <input class="token-input" placeholder="<GITHUB ACCESS TOKEN>"
-                    oninput="updateToken(event.target.value)">
+                    oninput="state.accessToken = event.target.value">
                 </input>
                 <button onclick="startPolling()">done!</button>
             </div>
