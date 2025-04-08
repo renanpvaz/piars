@@ -103,7 +103,6 @@
         .content {
             padding: 16px 32px;
             background: white;
-            border-top: 1px solid;
         }
 
         .content--config .config {
@@ -217,23 +216,27 @@
             background: transparent;
         }
 
-        .tab-button {
-            z-index: 1;
-            border-bottom: 0;
+        .tabs__container {
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
-            transform: translateY(1px);
-            border-bottom: 1px solid;
-            opacity: 0.6;
+            overflow: hidden;
+            background: #ffffff82;
+            width: max-content;
         }
 
-        .tab-button+.tab-button {
-            margin-left: 4px;
+        .tab-button {
+            background: 0;
+            border: 0;
+            z-index: 1;
+            border-bottom: 1px solid;
         }
 
         .tab-button--selected {
+            background: white;
+            border: 1px solid;
             border-bottom-color: transparent;
-            opacity: 1;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
         }
 
         .results {
@@ -322,7 +325,9 @@
     <header class="header">
         <h1 class="heading">piars</h1>
     </header>
-    <div class="tabs"></div>
+    <div class="tabs">
+        <div class="tabs__container"></div>
+    </div>
     <div class="content">
         <div class="search search--text">
             <input class="searchbar" type="search" placeholder="query or javascript expression">

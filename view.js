@@ -1,6 +1,6 @@
 function render(changes) {
   if ('tabs' in changes || 'selected' in changes)
-    renderMany('.tabs', Object.values(state.tabs), renderTab)
+    renderMany('.tabs__container', Object.values(state.tabs), renderTab)
 
   if ('selected' in changes && state.selected === 'config') renderConfig()
 
