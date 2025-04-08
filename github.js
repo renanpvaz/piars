@@ -26,6 +26,7 @@ function buildPRQuery(reposAndPRs) {
     ({ owner, repo, number }, index) => `
         pr${index}: repository(owner: "${owner}", name: "${repo}") {
           pullRequest(number: ${number}) {
+            isReadByViewer
             number
             title
             url
@@ -34,6 +35,14 @@ function buildPRQuery(reposAndPRs) {
             isDraft
             createdAt
             reviewDecision
+            latestReviews(last: 10) {
+                nodes {
+                    author {
+                        login
+                    }
+                    state
+                }
+            }
             reviewRequests(first: 10) {
                 nodes {
                     asCodeOwner
@@ -161,5 +170,44 @@ function toEntry(notification, pullRequest) {
       (Date.now() - new Date(pullRequest.createdAt)) / 1000 / 60 / 60 / 24,
     ),
     changedFiles: pullRequest.changedFiles,
+    progress: progress(pullRequest),
   }
+}
+
+// DRAFT
+// | OPEN (no reviews)
+// | REVIEWED_BY_THEM
+// | REVIEWED_BY_ME
+// | REVIEWED
+// | APPROVED_BY_THEM
+// | APPROVED_BY_ME
+// | APPROVED
+// | MERGED
+// | CLOSED
+function progress(pr) {
+  if (pr.isDraft) return ['DRAFT']
+  if (['CLOSED', 'MERGED'].includes(pr.state)) return [pr.state]
+  if (pr.reviewDecision === 'APPROVED') return ['APPROVED']
+
+  // TODO:
+  // use viewer
+  // max 10 reviews
+  const myReview = pr.latestReviews.nodes.find(
+    (r) => r.author.login === 'renanpvaz',
+  )
+  const status = []
+
+  if (myReview && myReview.state === 'APPROVED') status.push('APPROVED_BY_ME')
+  else if (myReview) status.push('REVIEWED_BY_ME')
+
+  const anyApproval = pr.latestReviews.nodes.find(
+    (r) => r.state === 'APPROVED' && r !== myReview,
+  )
+
+  if (anyApproval) status.push('APPROVED_BY_THEM')
+  else if (pr.latestReviews.length) status.push('REVIEWED_BY_THEM')
+
+  if (status.length) return status
+
+  return ['OPEN']
 }

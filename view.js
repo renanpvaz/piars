@@ -58,30 +58,26 @@ function renderTab(tab) {
 
 function renderNotification(pr) {
   const prItem = document.createElement('a')
+
   prItem.className = 'pr'
-
-  prItem.classList.toggle(
-    'pr--open',
-    pr.state === 'OPEN' && pr.reviewDecision === 'REVIEW_REQUIRED' && !pr.draft,
-  )
-  prItem.classList.toggle('pr--merged', pr.state === 'MERGED')
-  prItem.classList.toggle('pr--approved', pr.reviewDecision === 'APPROVED')
-  prItem.classList.toggle('pr--draft', pr.draft)
-  prItem.classList.toggle('pr--closed', pr.state === 'CLOSED')
-  prItem.classList.toggle(
-    'pr--reviewed',
-    pr.unread && pr.reviewDecision === 'APPROVED',
-  )
-
+  prItem.classList.add(...pr.progress.map((p) => `pr--${p.toLowerCase()}`))
   prItem.textContent = pr.title
   prItem.href = pr.url
   prItem.target = '_blank'
 
+  const bullet = document.createElement('figure')
+  bullet.className = 'pr__bullet'
+
   const details = document.createElement('span')
+  const status =
+    pr.state === 'MERGED' || pr.state === 'CLOSED'
+      ? pr.state
+      : pr.reviewDecision
 
   details.className = 'pr__details'
-  details.innerHTML = `author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old • ${pr.reviewDecision}`
+  details.innerHTML = `${status} &nbsp; • &nbsp; author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old`
 
+  prItem.appendChild(bullet)
   prItem.appendChild(details)
 
   return prItem
@@ -117,5 +113,5 @@ function renderMany(query, data, callback) {
 }
 
 function renderTitle() {
-  document.title = `piars | ${state.selected} (${state.notifications.length})`
+  document.title = `(${state.notifications.length}) ${state.selected}`
 }

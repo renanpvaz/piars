@@ -71,6 +71,7 @@ function loadPreviousState() {
 }
 
 function update(changes) {
+  console.log(changes)
   Object.assign(state, changes)
   render(changes)
   localStorage.setItem('piarsStateV1', JSON.stringify(state))
