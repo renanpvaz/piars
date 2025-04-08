@@ -60,6 +60,10 @@ function renderNotification(pr) {
   const prItem = document.createElement('a')
   prItem.className = 'pr'
 
+  prItem.classList.toggle(
+    'pr--open',
+    pr.state === 'OPEN' && pr.reviewDecision === 'REVIEW_REQUIRED' && !pr.draft,
+  )
   prItem.classList.toggle('pr--merged', pr.state === 'MERGED')
   prItem.classList.toggle('pr--approved', pr.reviewDecision === 'APPROVED')
   prItem.classList.toggle('pr--draft', pr.draft)
@@ -73,17 +77,11 @@ function renderNotification(pr) {
   prItem.href = pr.url
   prItem.target = '_blank'
 
-  const prState = document.createElement('sup')
-
-  prState.className = 'pr__state'
-  prState.textContent = `${pr.state !== 'MERGED' ? pr.reviewDecision : pr.state}`
-
   const details = document.createElement('span')
 
   details.className = 'pr__details'
-  details.innerHTML = `author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old `
+  details.innerHTML = `author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old • ${pr.reviewDecision}`
 
-  prItem.appendChild(prState)
   prItem.appendChild(details)
 
   return prItem

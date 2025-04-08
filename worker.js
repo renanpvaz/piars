@@ -14,10 +14,6 @@ onmessage = (e) => {
   }
 }
 
-function runFilter(filter, data) {
-  return
-}
-
 function evalFilter(
   filter,
   {

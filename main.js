@@ -109,7 +109,7 @@ function setToken(token) {
 
 function startPolling() {
   pollNotifications(state.accessToken, (notifications) => {
-    notifications.sort((a, b) => a.updatedAt - b.updatedAt)
+    notifications.sort((a, b) => b.updatedAt - a.updatedAt)
 
     update({ allNotifications: notifications })
     runCurrentFilter()
