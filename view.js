@@ -78,9 +78,13 @@ function renderNotification(pr) {
   prItem.target = '_blank'
 
   const details = document.createElement('span')
+  const status =
+    pr.state === 'MERGED' || pr.state === 'CLOSED'
+      ? pr.state
+      : pr.reviewDecision
 
   details.className = 'pr__details'
-  details.innerHTML = `author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old • ${pr.reviewDecision}`
+  details.innerHTML = `${status} &nbsp; • &nbsp; author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old`
 
   prItem.appendChild(details)
 
@@ -117,5 +121,5 @@ function renderMany(query, data, callback) {
 }
 
 function renderTitle() {
-  document.title = `piars | ${state.selected} (${state.notifications.length})`
+  document.title = `(${state.notifications.length}) ${state.selected}`
 }
