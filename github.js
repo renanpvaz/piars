@@ -15,7 +15,7 @@ async function fetchNotifications(token) {
 
     data = await response.json()
 
-    return data
+    return { pollInterval: response.headers.get('X-Poll-Interval'), data }
   } catch (error) {
     console.error('Error fetching data:', error)
   }

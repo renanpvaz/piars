@@ -80,22 +80,16 @@ function validateFilter(filter) {
   })
 }
 
-function pollNotifications(accessToken) {
-  const cb = () => {
-    postMessage({ type: 'fetch_started' })
+async function pollNotifications(accessToken) {
+  postMessage({ type: 'fetch_started' })
 
-    fetchNotifications(accessToken)
-      .then((notifications) =>
-        enrichWithPullRequestData(accessToken, notifications),
-      )
-      .then((notifications) => {
-        postMessage({
-          type: 'data_received',
-          notifications,
-        })
-      })
-  }
+  const { data, pollInterval } = await fetchNotifications(accessToken)
+  const notifications = await enrichWithPullRequestData(accessToken, data)
 
-  cb()
-  setInterval(cb, 1000 * 30)
+  postMessage({
+    type: 'data_received',
+    notifications,
+  })
+
+  setTimeout(() => pollNotifications(accessToken), 1000 * pollInterval)
 }
