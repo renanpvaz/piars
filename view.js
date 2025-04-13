@@ -80,17 +80,28 @@ function renderNotification(pr) {
 }
 
 function humanizeProgress(progress) {
-  if (progress.includes('APPROVED_BY_ME')) return 'Missing their approval'
-  if (progress.includes('APPROVED_BY_THEM')) return 'Missing your approval'
+  if (['OPEN', 'DRAFT', 'CLOSED', 'MERGED'].includes(progress[0])) {
+    const [status] = progress
+    return `${status[0]}${status.slice(1).toLowerCase()}`
+  }
 
-  if (progress.includes('REVIEWED_BY_ME')) return 'Missing their review'
-  if (progress.includes('REVIEWED_BY_THEM')) return 'Missing your review'
+  const missingYour = progress.includes('REVIEWED_BY_ME')
+    ? 'approval'
+    : 'review'
 
-  if (progress.includes('OPEN')) return 'Open to review'
+  const missingTheir = progress.includes('REVIEWED_BY_THEM')
+    ? 'approval'
+    : 'review'
 
-  const [status] = progress
+  if (progress.includes('APPROVED_BY_THEM'))
+    return `Missing your ${missingYour}`
+  if (progress.includes('APPROVED_BY_ME'))
+    return `Missing their ${missingTheir}`
 
-  return `${status[0]}${status.slice(1).toLowerCase()}`
+  if (progress.includes('REVIEWED_BY_THEM'))
+    return `Missing your ${missingYour}`
+  if (progress.includes('REVIEWED_BY_ME'))
+    return `Missing their ${missingTheir}`
 }
 
 function renderConfig() {
