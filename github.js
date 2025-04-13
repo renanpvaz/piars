@@ -74,6 +74,9 @@ function buildPRQuery(reposAndPRs) {
 
   return `
         query {
+          viewer {
+              login
+          }
           ${queryParts.join('\n')}
         }
       `
@@ -106,25 +109,29 @@ async function enrichWithPullRequestData(token, notifications) {
   const prNotifications = notifications.filter(
     (n) => n.subject.type === 'PullRequest',
   )
-  const pullRequests = prNotifications.map((n) => ({
+  const pullRequestParams = prNotifications.map((n) => ({
     owner: n.repository.owner.login,
     repo: n.repository.name,
     number: +n.subject.url.split('/').pop(),
   }))
 
-  const query = buildPRQuery(pullRequests)
+  const query = buildPRQuery(pullRequestParams)
   const { data } = await fetchPullRequests(token, query)
+  const { viewer, ...pullRequests } = data
 
-  const pullsPerRepo = Object.values(data).reduce((acc, { pullRequest }) => {
-    if (!pullRequest) return acc
+  const pullsPerRepo = Object.values(pullRequests).reduce(
+    (acc, { pullRequest }) => {
+      if (!pullRequest) return acc
 
-    const name = pullRequest.repository.nameWithOwner
+      const name = pullRequest.repository.nameWithOwner
 
-    if (!(name in acc)) acc[name] = {}
-    acc[name][pullRequest.number] = pullRequest
+      if (!(name in acc)) acc[name] = {}
+      acc[name][pullRequest.number] = pullRequest
 
-    return acc
-  }, {})
+      return acc
+    },
+    {},
+  )
 
   return prNotifications.map((n) => {
     const [org, repositoryName, _, pullNumber] = n.subject.url
@@ -133,7 +140,7 @@ async function enrichWithPullRequestData(token, notifications) {
     const name = `${org}/${repositoryName}`
     const pullRequest = pullsPerRepo[name] && pullsPerRepo[name][pullNumber]
 
-    return toEntry(n, pullRequest)
+    return toEntry(n, pullRequest, viewer)
   })
 }
 
@@ -150,7 +157,7 @@ function pollNotifications(accessToken, callback) {
   setInterval(cb, 1000 * 30)
 }
 
-function toEntry(notification, pullRequest) {
+function toEntry(notification, pullRequest, viewer) {
   return {
     title: notification.subject.title,
     url: `https://github.com/${notification.repository.full_name}/pull/${pullRequest.number}`,
@@ -170,7 +177,8 @@ function toEntry(notification, pullRequest) {
       (Date.now() - new Date(pullRequest.createdAt)) / 1000 / 60 / 60 / 24,
     ),
     changedFiles: pullRequest.changedFiles,
-    progress: progress(pullRequest),
+    progress: progress(viewer, pullRequest),
+    viewer: viewer.login,
   }
 }
 
@@ -184,16 +192,15 @@ function toEntry(notification, pullRequest) {
 // | APPROVED
 // | MERGED
 // | CLOSED
-function progress(pr) {
+function progress(viewer, pr) {
   if (pr.isDraft) return ['DRAFT']
   if (['CLOSED', 'MERGED'].includes(pr.state)) return [pr.state]
   if (pr.reviewDecision === 'APPROVED') return ['APPROVED']
 
   // TODO:
-  // use viewer
   // max 10 reviews
   const myReview = pr.latestReviews.nodes.find(
-    (r) => r.author.login === 'renanpvaz',
+    (r) => r.author.login === viewer.login,
   )
   const status = []
 
