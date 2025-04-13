@@ -14,6 +14,7 @@
 //   - [ ] tab name with whitespace
 
 const initialState = {
+  version: '1',
   allNotifications: [],
   tabs: {
     all: {
@@ -43,8 +44,8 @@ const initialState = {
   },
   query: {
     needsReview: 'state === "OPEN" && reviewDecision !== "APPROVED"',
-    dependabot: 'title.startsWith("Bump")',
-    stale: 'age > 7',
+    dependabot: 'author === "dependabot"',
+    stale: 'age > 14',
     big: 'changedFiles > 10',
   },
   selected: 'all',
@@ -67,7 +68,13 @@ function loadPreviousState() {
     cachedState = JSON.parse(localStorage.getItem('piarsStateV1'))
   } catch {}
 
-  return cachedState
+  if (!cachedState) return
+
+  if (initialState.version === cachedState.version) return cachedState
+
+  return Object.assign(initialState, cachedState, {
+    version: initialState.version,
+  })
 }
 
 function update(changes) {
