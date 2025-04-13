@@ -144,19 +144,6 @@ async function enrichWithPullRequestData(token, notifications) {
   })
 }
 
-function pollNotifications(accessToken, callback) {
-  const cb = () => {
-    fetchNotifications(accessToken)
-      .then((notifications) =>
-        enrichWithPullRequestData(accessToken, notifications),
-      )
-      .then(callback)
-  }
-
-  cb()
-  setInterval(cb, 1000 * 30)
-}
-
 function toEntry(notification, pullRequest, viewer) {
   return {
     title: notification.subject.title,

@@ -1,9 +1,15 @@
+importScripts('github.js')
+
 onmessage = (e) => {
   switch (e.data.type) {
-    case 'filter':
+    case 'page_loaded':
+      pollNotifications(e.data.accessToken)
+      return
+
+    case 'filter_selected':
       const filter = validateFilter(e.data.filter)
       const payload = {
-        type: 'filter',
+        type: 'filter_applied',
         filter,
         value: e.data.value.filter(
           (element) => evalFilter(e.data.filter, element).value,
@@ -72,4 +78,24 @@ function validateFilter(filter) {
     age: 0,
     changedFiles: 0,
   })
+}
+
+function pollNotifications(accessToken) {
+  const cb = () => {
+    postMessage({ type: 'fetch_started' })
+
+    fetchNotifications(accessToken)
+      .then((notifications) =>
+        enrichWithPullRequestData(accessToken, notifications),
+      )
+      .then((notifications) => {
+        postMessage({
+          type: 'data_received',
+          notifications,
+        })
+      })
+  }
+
+  cb()
+  setInterval(cb, 1000 * 30)
 }

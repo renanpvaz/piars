@@ -71,7 +71,6 @@ function loadPreviousState() {
 }
 
 function update(changes) {
-  console.log(changes)
   Object.assign(state, changes)
   render(changes)
   localStorage.setItem('piarsStateV1', JSON.stringify(state))
@@ -88,7 +87,7 @@ function updateTab(newState) {
 
 function runCurrentFilter() {
   getWorker().postMessage({
-    type: 'filter',
+    type: 'filter_selected',
     value: state.allNotifications,
     filter: state.query[state.selected],
   })
@@ -108,20 +107,14 @@ function setToken(token) {
   state.accessToken = token
 }
 
-function startPolling() {
-  pollNotifications(state.accessToken, (notifications) => {
-    notifications.sort((a, b) => b.updatedAt - a.updatedAt)
-
-    update({ allNotifications: notifications })
-    runCurrentFilter()
-  })
-}
-
 ;(async function init() {
   update(loadPreviousState() || initialState)
 
   if (state.accessToken) {
-    startPolling()
+    getWorker().postMessage({
+      type: 'page_loaded',
+      accessToken: state.accessToken,
+    })
   }
 
   if (state.allNotifications.length) {
@@ -130,9 +123,21 @@ function startPolling() {
 
   getWorker().onmessage = (e) => {
     switch (e.data.type) {
-      case 'filter':
+      case 'filter_applied':
         const { filter, value } = e.data
         update({ filter, notifications: value })
+        break
+
+      case 'fetch_started':
+        document.title = 'Polling for fresh PRs'
+        break
+
+      case 'data_received':
+        const { notifications } = e.data
+
+        notifications.sort((a, b) => b.updatedAt - a.updatedAt)
+        update({ allNotifications: notifications })
+        runCurrentFilter()
         break
     }
   }
