@@ -42,7 +42,7 @@ const initialState = {
     },
   },
   query: {
-    needsReview: 'state !== "MERGED" && reviewDecision !== "APPROVED"',
+    needsReview: 'state === "OPEN" && reviewDecision !== "APPROVED"',
     dependabot: 'title.startsWith("Bump")',
     stale: 'age > 7',
     big: 'changedFiles > 10',
