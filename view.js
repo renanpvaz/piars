@@ -69,18 +69,28 @@ function renderNotification(pr) {
   bullet.className = 'pr__bullet'
 
   const details = document.createElement('span')
-  const status =
-    pr.state === 'MERGED' || pr.state === 'CLOSED'
-      ? pr.state
-      : pr.reviewDecision
 
   details.className = 'pr__details'
-  details.innerHTML = `${status} &nbsp; • &nbsp; author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old`
+  details.innerHTML = `${humanizeProgress(pr.progress)} &nbsp; • &nbsp; author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old`
 
   prItem.appendChild(bullet)
   prItem.appendChild(details)
 
   return prItem
+}
+
+function humanizeProgress(progress) {
+  if (progress.includes('APPROVED_BY_ME')) return 'Missing their approval'
+  if (progress.includes('APPROVED_BY_THEM')) return 'Missing your approval'
+
+  if (progress.includes('REVIEWED_BY_ME')) return 'Missing their review'
+  if (progress.includes('REVIEWED_BY_THEM')) return 'Missing your review'
+
+  if (progress.includes('OPEN')) return 'Open to review'
+
+  const [status] = progress
+
+  return `${status[0]}${status.slice(1).toLowerCase()}`
 }
 
 function renderConfig() {
