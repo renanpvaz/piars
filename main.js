@@ -114,14 +114,18 @@ function setToken(token) {
   state.accessToken = token
 }
 
+function startPolling() {
+  getWorker().postMessage({
+    type: 'page_loaded',
+    accessToken: state.accessToken,
+  })
+}
+
 ;(async function init() {
   update(loadPreviousState() || initialState)
 
   if (state.accessToken) {
-    getWorker().postMessage({
-      type: 'page_loaded',
-      accessToken: state.accessToken,
-    })
+    startPolling()
   }
 
   if (state.allNotifications.length) {
