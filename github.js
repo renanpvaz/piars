@@ -34,6 +34,7 @@ function buildPRQuery(reposAndPRs) {
             author { login }
             isDraft
             createdAt
+            updatedAt
             reviewDecision
             latestReviews(last: 10) {
                 nodes {
@@ -199,7 +200,7 @@ function progress(viewer, pr) {
   )
 
   if (anyApproval) status.push('APPROVED_BY_THEM')
-  else if (pr.latestReviews.length) status.push('REVIEWED_BY_THEM')
+  else if (pr.latestReviews.nodes.length) status.push('REVIEWED_BY_THEM')
 
   if (status.length) return status
 
