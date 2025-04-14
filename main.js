@@ -68,12 +68,14 @@ function loadPreviousState() {
     cachedState = JSON.parse(localStorage.getItem('piarsStateV1'))
   } catch {}
 
-  if (!cachedState) return
+  const { query, tabs, accessToken, settings, selected } = cachedState
 
-  if (initialState.version === cachedState.version) return cachedState
-
-  return Object.assign(initialState, cachedState, {
-    version: initialState.version,
+  return Object.assign(initialState, {
+    query,
+    tabs,
+    accessToken,
+    settings,
+    selected,
   })
 }
 
