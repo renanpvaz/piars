@@ -116,8 +116,7 @@ async function enrichWithPullRequestData(token, notifications) {
   }))
 
   const query = buildPRQuery(pullRequestParams)
-  const { data } = await fetchPullRequests(token, query)
-  const { viewer, ...pullRequests } = data
+  const { viewer, ...pullRequests } = await fetchPullRequests(token, query)
 
   const pullsPerRepo = Object.values(pullRequests).reduce(
     (acc, { pullRequest }) => {
