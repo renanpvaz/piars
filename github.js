@@ -195,12 +195,14 @@ function progress(viewer, pr) {
   if (myReview && myReview.state === 'APPROVED') status.push('APPROVED_BY_ME')
   else if (myReview) status.push('REVIEWED_BY_ME')
 
-  const anyApproval = pr.latestReviews.nodes.find(
-    (r) => r.state === 'APPROVED' && r !== myReview,
+  const remainingReviews = pr.latestReviews.nodes.filter(
+    (r) => r.author.login !== viewer.login,
   )
 
+  const anyApproval = remainingReviews.find((r) => r.state === 'APPROVED')
+
   if (anyApproval) status.push('APPROVED_BY_THEM')
-  else if (pr.latestReviews.nodes.length) status.push('REVIEWED_BY_THEM')
+  else if (remainingReviews.length) status.push('REVIEWED_BY_THEM')
 
   if (status.length) return status
 
