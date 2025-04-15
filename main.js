@@ -1,51 +1,22 @@
-// TODO:
-// - mvp
-//   - [x] input github token
-//   - [x] eval js in web worker
-//   - [ ] view schema
-//   - [ ] error messages?
-// - ideas
-//   - [ ] settings page: poll interval, theme, wallpaper, token
-//   - [ ] browser notifications
-//   - [ ] add new tab
-// - bugs
-//   - [ ] tabs no wrap
-//   - [ ] token input no feedback
-//   - [ ] tab name with whitespace
-
 const initialState = {
   version: '1',
   allNotifications: [],
-  tabs: {
-    all: {
-      type: 'pulls',
-      name: 'all',
-    },
-    needsReview: {
-      type: 'pulls',
-      name: 'needsReview',
-    },
-    dependabot: {
-      type: 'pulls',
-      name: 'dependabot',
-    },
-    stale: {
-      type: 'pulls',
-      name: 'stale',
-    },
-    big: {
-      type: 'pulls',
-      name: 'big',
-    },
-    config: {
-      type: 'config',
-      name: 'config',
-    },
-  },
+  tabs: [
+    'all',
+    'needs review',
+    'approved',
+    'mine',
+    'dependabot',
+    'big',
+    'config',
+  ],
   query: {
-    needsReview: 'state === "OPEN" && reviewDecision !== "APPROVED"',
+    all: '',
+    'needs review':
+      'state === "OPEN" && reviewDecision !== "APPROVED" && author !== viewer',
+    approved: 'reviewDecision === "APPROVED"',
+    mine: 'author === viewer',
     dependabot: 'author === "dependabot"',
-    stale: 'age > 14',
     big: 'changedFiles > 10',
   },
   selected: 'all',
@@ -70,14 +41,11 @@ function loadPreviousState() {
 
   if (!cachedState) return
 
-  const { query, tabs, accessToken, settings, selected } = cachedState
+  // TODO figure out what to cache
+  const { accessToken } = cachedState
 
   return Object.assign(initialState, {
-    query,
-    tabs,
     accessToken,
-    settings,
-    selected,
   })
 }
 
@@ -87,21 +55,15 @@ function update(changes) {
   localStorage.setItem('piarsStateV1', JSON.stringify(state))
 }
 
-function updateTab(newState) {
-  update({
-    tabs: {
-      ...state.tabs,
-      [state.selected]: Object.assign(state.tabs[state.selected], newState),
-    },
-  })
-}
-
 function runCurrentFilter() {
-  getWorker().postMessage({
-    type: 'filter_selected',
-    value: state.allNotifications,
-    filter: state.query[state.selected],
-  })
+  const filter = state.query[state.selected]
+  if (filter != null) {
+    getWorker().postMessage({
+      type: 'filter_selected',
+      value: state.allNotifications,
+      filter,
+    })
+  }
 }
 
 function getWorker() {

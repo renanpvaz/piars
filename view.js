@@ -1,6 +1,6 @@
 function render(changes) {
   if ('tabs' in changes || 'selected' in changes)
-    renderMany('.tabs__container', Object.values(state.tabs), renderTab)
+    renderMany('.tabs__container', state.tabs, renderTab)
 
   if ('selected' in changes && state.selected === 'config') renderConfig()
 
@@ -28,13 +28,13 @@ function renderSearch(container) {
 
   container.className = `search search--${type}`
 
-  const input = container.firstElementChild
+  const textarea = container.firstElementChild
 
-  input.className = `searchbar`
-  input.type = 'search'
-  input.placeholder = 'query or javascript expression'
-  input.value = expression
-  input.oninput = () => {
+  textarea.className = `searchbar`
+  textarea.type = 'search'
+  textarea.placeholder = 'query or javascript expression'
+  textarea.value = expression
+  textarea.oninput = () => {
     update({ query: { ...state.query, [state.selected]: input.value } })
     runCurrentFilter()
   }
@@ -46,11 +46,11 @@ function renderTab(tab) {
   const button = document.createElement('button')
 
   button.className = 'tab-button'
-  button.textContent = tab.name
-  button.classList.toggle('tab-button--selected', tab.name === state.selected)
+  button.textContent = tab
+  button.classList.toggle('tab-button--selected', tab === state.selected)
   button.onclick = () => {
-    update({ selected: tab.name })
-    if (tab.type == 'pulls') runCurrentFilter()
+    update({ selected: tab })
+    runCurrentFilter()
   }
 
   return button

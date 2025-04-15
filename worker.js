@@ -37,6 +37,7 @@ function evalFilter(
     draft,
     age,
     changedFiles,
+    viewer,
   },
 ) {
   if (!filter)

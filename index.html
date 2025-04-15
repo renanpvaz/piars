@@ -281,19 +281,26 @@
             width: 600px;
             border-radius: 8px;
             overflow: hidden;
+            position: relative;
         }
 
         .search::before {
             content: '';
             display: inline-block;
             color: inherit;
-            height: 100%;
-            font-size: 11px;
+            font-size: 10px;
             line-height: 2;
-            padding: 6px;
+            padding: 0 4px;
             vertical-align: middle;
-            min-width: 40px;
+            min-width: 24px;
             text-align: center;
+            position: absolute;
+            right: 0;
+            bottom: 0;
+        }
+
+        .search:focus-within {
+            border-color: var(--text-color);
         }
 
         .search--javascript::before {
@@ -318,7 +325,7 @@
         .searchbar {
             flex: 1;
             font-size: 16px;
-            padding: 6px 8px;
+            padding: 8px 16px;
             font-family: monospace;
             outline: 0;
             border: 0;
@@ -362,7 +369,7 @@
     </div>
     <div class="content">
         <div class="search search--text">
-            <input class="searchbar" type="search" placeholder="query or javascript expression">
+            <textarea class="searchbar" type="search" placeholder="query or javascript expression"></textarea>
         </div>
         <div class="results">
             <span>Counting all the nits...</span>
