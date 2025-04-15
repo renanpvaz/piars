@@ -181,8 +181,9 @@
         }
 
         .pr__details {
-            display: block;
             margin-top: 4px;
+            display: flex;
+            justify-content: space-between;
         }
 
         .pr--reviewed_by_me {
@@ -192,6 +193,7 @@
 
         .pr--reviewed_by_them {
             --status-outer-color: #5E5E5E;
+            --status-inner-opacity: 1;
         }
 
         .pr--approved_by_me {

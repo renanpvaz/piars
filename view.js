@@ -71,7 +71,9 @@ function renderNotification(pr) {
   const details = document.createElement('span')
 
   details.className = 'pr__details'
-  details.innerHTML = `${humanizeProgress(pr.progress)} &nbsp; • &nbsp; author: ${pr.author} &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age}d old`
+  details.innerHTML = `
+    <span>${humanizeProgress(pr.progress)} &nbsp; • &nbsp; ${pr.changedFiles} file(s) changed &nbsp; ${pr.age > 0 ? `${pr.age}d old` : ''}</span>
+    <span>${elapsedTime(pr.updatedAt)} &nbsp;</span>`
 
   prItem.appendChild(bullet)
   prItem.appendChild(details)
@@ -93,6 +95,11 @@ function humanizeProgress(progress) {
     ? 'approval'
     : 'review'
 
+  if (
+    progress.includes('APPROVED_BY_THEM') &&
+    progress.includes('APPROVED_BY_ME')
+  )
+    return 'Missing additional approvals'
   if (progress.includes('APPROVED_BY_THEM'))
     return `Missing your ${missingYour}`
   if (progress.includes('APPROVED_BY_ME'))
@@ -102,6 +109,27 @@ function humanizeProgress(progress) {
     return `Missing your ${missingYour}`
   if (progress.includes('REVIEWED_BY_ME'))
     return `Missing their ${missingTheir}`
+}
+
+function elapsedTime(time) {
+  const elapsed = Date.now() - time
+  const seconds = Math.floor(elapsed / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+  const weeks = Math.floor(days / 7)
+  const startOfWeek = new Date().getDate() - new Date().getDay()
+
+  if (weeks > 1) return `${weeks}w ago`
+  if (days <= 28 && days > 1 && new Date(time).getDate() < startOfWeek)
+    return 'last week'
+  if (days === 1) return 'yesterday'
+  if (days > 0) return `${days}d ago`
+  if (hours > 0) return `${hours}h ago`
+  if (minutes > 0) return `${minutes}m ago`
+  if (seconds > 1) return `${seconds}s ago`
+
+  return 'just now'
 }
 
 function renderConfig() {
