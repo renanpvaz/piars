@@ -35,7 +35,7 @@ function renderSearch(container) {
   textarea.placeholder = 'query or javascript expression'
   textarea.value = expression
   textarea.oninput = () => {
-    update({ query: { ...state.query, [state.selected]: input.value } })
+    update({ query: { ...state.query, [state.selected]: textarea.value } })
     runCurrentFilter()
   }
 
