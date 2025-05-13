@@ -184,6 +184,7 @@ function progress(viewer, pr) {
   if (pr.isDraft) return ['DRAFT']
   if (['CLOSED', 'MERGED'].includes(pr.state)) return [pr.state]
   if (pr.reviewDecision === 'APPROVED') return ['APPROVED']
+  if (viewer === pr.author) return ['OPEN']
 
   // TODO:
   // max 10 reviews
