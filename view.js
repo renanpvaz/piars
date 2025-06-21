@@ -82,7 +82,7 @@ function renderNotification(pr) {
 }
 
 function humanizeProgress(progress) {
-  if (['OPEN', 'DRAFT', 'CLOSED', 'MERGED'].includes(progress[0])) {
+  if (['OPEN', 'DRAFT', 'CLOSED', 'MERGED', 'APPROVED'].includes(progress[0])) {
     const [status] = progress
     return `${status[0]}${status.slice(1).toLowerCase()}`
   }
