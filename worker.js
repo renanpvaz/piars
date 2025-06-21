@@ -81,16 +81,36 @@ function validateFilter(filter) {
   })
 }
 
-async function pollNotifications(accessToken) {
+async function pollNotifications(
+  accessToken,
+  previousResult = {
+    type: 'success',
+    pollInterval: 60,
+    lastModified: '',
+    data: [],
+  },
+) {
   postMessage({ type: 'fetch_started' })
 
-  const { data, pollInterval } = await fetchNotifications(accessToken)
-  const notifications = await enrichWithPullRequestData(accessToken, data)
+  let result = await fetchNotifications(
+    accessToken,
+    previousResult.lastModified,
+  )
+
+  result = result.type === 'success' ? result : previousResult
+
+  const notifications = await enrichWithPullRequestData(
+    accessToken,
+    result.data,
+  )
 
   postMessage({
     type: 'data_received',
     notifications,
   })
 
-  setTimeout(() => pollNotifications(accessToken), 1000 * pollInterval)
+  setTimeout(
+    () => pollNotifications(accessToken, previousResult),
+    1000 * result.pollInterval,
+  )
 }

@@ -1,4 +1,4 @@
-async function fetchNotifications(token) {
+async function fetchNotifications(token, lastModified = '') {
   const url = `https://api.github.com/notifications?all=true`
 
   try {
@@ -6,6 +6,7 @@ async function fetchNotifications(token) {
       headers: {
         Authorization: `token ${token}`,
         Accept: 'application/vnd.github.v3+json',
+        'If-Modified-Since': lastModified,
       },
     })
 
@@ -15,9 +16,18 @@ async function fetchNotifications(token) {
 
     data = await response.json()
 
-    return { pollInterval: response.headers.get('X-Poll-Interval'), data }
+    return {
+      type: 'success',
+      pollInterval: response.headers.get('X-Poll-Interval'),
+      lastModified: response.headers.get('Last-Modified'),
+      data,
+    }
   } catch (error) {
     console.error('Error fetching data:', error)
+    return {
+      type: 'error',
+      error,
+    }
   }
 }
 
