@@ -110,7 +110,7 @@ async function pollNotifications(
   })
 
   setTimeout(
-    () => pollNotifications(accessToken, previousResult),
+    () => pollNotifications(accessToken, result),
     1000 * result.pollInterval,
   )
 }
