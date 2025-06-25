@@ -112,7 +112,9 @@ function startPolling() {
       case 'data_received':
         const { notifications } = e.data
 
-        update({ allNotifications: notifications })
+        update({
+          allNotifications: { ...state.allNotifications, ...notifications },
+        })
         runCurrentFilter()
         break
     }
