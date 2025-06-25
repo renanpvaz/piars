@@ -4,8 +4,10 @@ function render(changes) {
 
   if ('selected' in changes && state.selected === 'config') renderConfig()
 
-  if ('notifications' in changes)
-    renderMany('.results', state.notifications, renderNotification)
+  if ('notifications' in changes) {
+    const children = Object.values(state.notifications).map(renderNotification)
+    document.querySelector('.results').replaceChildren(...children)
+  }
 
   if ('filter' in changes) renderSearch(document.querySelector('.search'))
 
@@ -162,5 +164,5 @@ function renderMany(query, data, callback) {
 }
 
 function renderTitle() {
-  document.title = `(${state.notifications.length}) ${state.selected}`
+  document.title = `(${Object.keys(state.notifications).length}) ${state.selected}`
 }

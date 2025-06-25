@@ -11,8 +11,10 @@ onmessage = (e) => {
       const payload = {
         type: 'filter_applied',
         filter,
-        value: e.data.value.filter(
-          (element) => evalFilter(e.data.filter, element).value,
+        value: Object.fromEntries(
+          Object.entries(e.data.value).filter(
+            ([_key, element]) => evalFilter(e.data.filter, element).value,
+          ),
         ),
       }
 

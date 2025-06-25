@@ -1,6 +1,5 @@
 const initialState = {
   version: '1',
-  allNotifications: [],
   tabs: [
     'all',
     'needs review',
@@ -21,6 +20,7 @@ const initialState = {
   },
   selected: 'all',
   notifications: [],
+  allNotifications: {},
   settings: {
     theme: 'light',
     debug: false,
@@ -94,7 +94,7 @@ function startPolling() {
     startPolling()
   }
 
-  if (state.allNotifications.length) {
+  if (Object.keys(state.allNotifications).length) {
     runCurrentFilter()
   }
 
@@ -112,7 +112,6 @@ function startPolling() {
       case 'data_received':
         const { notifications } = e.data
 
-        notifications.sort((a, b) => b.updatedAt - a.updatedAt)
         update({ allNotifications: notifications })
         runCurrentFilter()
         break
