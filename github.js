@@ -144,8 +144,6 @@ async function enrichWithPullRequestData(token, notifications) {
     {},
   )
 
-  prNotifications.sort((a, b) => b.updatedAt - a.updatedAt)
-
   return Object.fromEntries(
     prNotifications.map((n) => {
       const [org, repositoryName, _, pullNumber] = n.subject.url

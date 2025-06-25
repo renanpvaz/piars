@@ -5,8 +5,13 @@ function render(changes) {
   if ('selected' in changes && state.selected === 'config') renderConfig()
 
   if ('notifications' in changes) {
-    const children = Object.values(state.notifications).map(renderNotification)
-    document.querySelector('.results').replaceChildren(...children)
+    const notifications = Object.values(state.notifications)
+
+    notifications.sort((a, b) => b.updatedAt - a.updatedAt)
+
+    document
+      .querySelector('.results')
+      .replaceChildren(...notifications.map(renderNotification))
   }
 
   if ('filter' in changes) renderSearch(document.querySelector('.search'))
