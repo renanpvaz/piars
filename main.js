@@ -1,36 +1,3 @@
-const initialState = {
-  version: '1',
-  tabs: [
-    'all',
-    'needs review',
-    'approved',
-    'mine',
-    'dependabot',
-    'big',
-    'config',
-  ],
-  query: {
-    all: '',
-    'needs review':
-      'state === "OPEN" && reviewDecision !== "APPROVED" && author !== viewer',
-    approved: 'reviewDecision === "APPROVED"',
-    mine: 'author === viewer',
-    dependabot: 'author === "dependabot"',
-    big: 'changedFiles > 10',
-  },
-  selected: 'all',
-  notifications: [],
-  allNotifications: {},
-  settings: {
-    theme: 'light',
-    debug: false,
-    pollIntervalMili: 1000 * 30,
-    wallpaperUrl: '',
-  },
-}
-
-const state = {}
-
 let worker
 
 function loadPreviousState() {
@@ -55,17 +22,6 @@ function update(changes) {
   localStorage.setItem('piarsStateV1', JSON.stringify(state))
 }
 
-function runCurrentFilter() {
-  const filter = state.query[state.selected]
-  if (filter != null) {
-    getWorker().postMessage({
-      type: 'filter_selected',
-      value: state.allNotifications,
-      filter,
-    })
-  }
-}
-
 function getWorker() {
   if (!window.Worker) return
 
@@ -80,42 +36,32 @@ function setToken(token) {
   state.accessToken = token
 }
 
-function startPolling() {
-  getWorker().postMessage({
-    type: 'page_loaded',
-    accessToken: state.accessToken,
-  })
-}
-
 ;(async function init() {
   update(loadPreviousState() || initialState)
 
   if (state.accessToken) {
-    startPolling()
-  }
-
-  if (Object.keys(state.allNotifications).length) {
-    runCurrentFilter()
+    getWorker().postMessage({
+      type: 'page_loaded',
+      filters: Object.entries(state.query),
+      accessToken: state.accessToken,
+    })
   }
 
   getWorker().onmessage = (e) => {
     switch (e.data.type) {
       case 'filter_applied':
-        const { filter, value } = e.data
-        update({ filter, notifications: value })
+        const { filter, tab, value } = e.data
+        update({
+          filter,
+          allNotifications: {
+            ...state.allNotifications,
+            [tab]: { ...state.allNotifications[tab], ...value },
+          },
+        })
         break
 
       case 'fetch_started':
         document.title = 'Polling for fresh PRs'
-        break
-
-      case 'data_received':
-        const { notifications } = e.data
-
-        update({
-          allNotifications: { ...state.allNotifications, ...notifications },
-        })
-        runCurrentFilter()
         break
     }
   }

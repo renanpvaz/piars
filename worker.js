@@ -3,23 +3,35 @@ importScripts('github.js')
 onmessage = (e) => {
   switch (e.data.type) {
     case 'page_loaded':
-      pollNotifications(e.data.accessToken)
+      postMessage({ type: 'fetch_started' })
+
+      pollNotifications((notifications) => {
+        e.data.filters.forEach(([tab, filter]) =>
+          runFilter(tab, filter, notifications),
+        )
+      }, e.data.accessToken)
       return
 
     case 'filter_selected':
-      const filter = validateFilter(e.data.filter)
-      const payload = {
-        type: 'filter_applied',
-        filter,
-        value: Object.fromEntries(
-          Object.entries(e.data.value).filter(
-            ([_key, element]) => evalFilter(e.data.filter, element).value,
-          ),
-        ),
-      }
-
-      return postMessage(payload)
+      return
   }
+}
+
+function runFilter(tab, filter, notifications) {
+  const evaluatedFilter = validateFilter(filter)
+
+  const payload = {
+    type: 'filter_applied',
+    tab,
+    filter: evaluatedFilter,
+    value: Object.fromEntries(
+      Object.entries(notifications).filter(
+        ([_key, element]) => evalFilter(filter, element).value,
+      ),
+    ),
+  }
+
+  return postMessage(payload)
 }
 
 function evalFilter(
@@ -84,6 +96,7 @@ function validateFilter(filter) {
 }
 
 async function pollNotifications(
+  callback,
   accessToken,
   previousResult = {
     type: 'success',
@@ -92,8 +105,6 @@ async function pollNotifications(
     data: [],
   },
 ) {
-  postMessage({ type: 'fetch_started' })
-
   let result = await fetchNotifications(
     accessToken,
     previousResult.lastModified,
@@ -106,13 +117,10 @@ async function pollNotifications(
     result.data,
   )
 
-  postMessage({
-    type: 'data_received',
-    notifications,
-  })
+  callback(notifications)
 
   setTimeout(
-    () => pollNotifications(accessToken, result),
+    () => pollNotifications(callback, accessToken, result),
     1000 * result.pollInterval,
   )
 }

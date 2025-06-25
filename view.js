@@ -4,8 +4,8 @@ function render(changes) {
 
   if ('selected' in changes && state.selected === 'config') renderConfig()
 
-  if ('notifications' in changes) {
-    const notifications = Object.values(state.notifications)
+  if ('allNotifications' in changes || 'selected' in changes) {
+    const notifications = getNotifications()
 
     notifications.sort((a, b) => b.updatedAt - a.updatedAt)
 
@@ -57,7 +57,6 @@ function renderTab(tab) {
   button.classList.toggle('tab-button--selected', tab === state.selected)
   button.onclick = () => {
     update({ selected: tab })
-    runCurrentFilter()
   }
 
   return button
