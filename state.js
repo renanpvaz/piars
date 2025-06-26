@@ -31,8 +31,14 @@ const initialState = {
 
 const state = {}
 
-function getNotifications() {
-  return state.selected in state.allNotifications
-    ? Object.values(state.allNotifications[state.selected])
+function getNotifications(tab = state.selected) {
+  return tab in state.allNotifications
+    ? Object.values(state.allNotifications[tab])
     : []
+}
+
+function getSortedNotifications() {
+  const notifications = getNotifications()
+  notifications.sort((a, b) => b.updatedAt - a.updatedAt)
+  return notifications
 }

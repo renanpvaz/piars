@@ -1,13 +1,14 @@
 function render(changes) {
-  if ('tabs' in changes || 'selected' in changes)
-    renderMany('.tabs__container', state.tabs, renderTab)
+  if ('tabs' in changes || 'selected' in changes) {
+    document
+      .querySelector('.tabs__container')
+      .replaceChildren(...state.tabs.map(renderTab))
+  }
 
   if ('selected' in changes && state.selected === 'config') renderConfig()
 
   if ('allNotifications' in changes || 'selected' in changes) {
-    const notifications = getNotifications()
-
-    notifications.sort((a, b) => b.updatedAt - a.updatedAt)
+    const notifications = getSortedNotifications()
 
     document
       .querySelector('.results')
@@ -57,6 +58,16 @@ function renderTab(tab) {
   button.classList.toggle('tab-button--selected', tab === state.selected)
   button.onclick = () => {
     update({ selected: tab })
+  }
+
+  const count = getNotifications(tab).length
+
+  if (count) {
+    const counter = document.createElement('span')
+
+    counter.textContent = `${count}`.padStart(2, '0')
+    counter.className = 'tab-counter'
+    button.appendChild(counter)
   }
 
   return button
@@ -160,11 +171,6 @@ function renderConfig() {
   document.querySelector('.content').appendChild(container)
 
   return container
-}
-
-function renderMany(query, data, callback) {
-  const children = data.map(callback)
-  document.querySelector(query).replaceChildren(...children)
 }
 
 function renderTitle() {

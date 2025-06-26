@@ -261,6 +261,9 @@
             border: 0;
             z-index: 1;
             border-bottom: 1px solid;
+            opacity: .5;
+            line-height: 20px;
+            height: 30px;
         }
 
         .tab-button--selected {
@@ -269,6 +272,22 @@
             border-bottom-color: transparent;
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
+            opacity: 1;
+        }
+
+        .tab-counter {
+            font-family: monospace;
+            font-size: 11px;
+            vertical-align: middle;
+            margin-left: 4px;
+            line-height: 20px;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
+        .tab-button--selected .tab-counter {
+            font-weight: bold;
+            background: #ccc;
         }
 
         .results {
