@@ -1,23 +1,19 @@
 function render(changes) {
-  if ('tabs' in changes || 'selected' in changes) {
-    document
-      .querySelector('.tabs__container')
-      .replaceChildren(...state.tabs.map(renderTab))
-  }
-
   if ('selected' in changes && state.selected === 'config') renderConfig()
-
-  if ('allNotifications' in changes || 'selected' in changes) {
-    const notifications = getSortedNotifications()
-
-    document
-      .querySelector('.results')
-      .replaceChildren(...notifications.map(renderNotification))
-  }
 
   if ('filter' in changes) renderSearch(document.querySelector('.search'))
 
   if (state.accessToken) hideInstructions()
+
+  const notifications = getSortedNotifications()
+
+  document
+    .querySelector('.tabs__container')
+    .replaceChildren(...state.tabs.map(renderTab))
+
+  document
+    .querySelector('.results')
+    .replaceChildren(...notifications.map(renderNotification))
 
   document
     .querySelector('.content')
@@ -174,5 +170,5 @@ function renderConfig() {
 }
 
 function renderTitle() {
-  document.title = `(${Object.keys(state.notifications).length}) ${state.selected}`
+  document.title = `(${getNotifications().length}) ${state.selected}`
 }
