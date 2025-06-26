@@ -16,12 +16,6 @@ function loadPreviousState() {
   })
 }
 
-function update(changes) {
-  Object.assign(state, changes)
-  render(changes)
-  localStorage.setItem('piarsStateV1', JSON.stringify(state))
-}
-
 function getWorker() {
   if (!window.Worker) return
 
@@ -38,6 +32,11 @@ function setToken(token) {
 
 ;(async function init() {
   update(loadPreviousState() || initialState)
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') selectTab(+1)
+    if (e.key === 'ArrowLeft') selectTab(-1)
+  })
 
   if (state.accessToken) {
     getWorker().postMessage({

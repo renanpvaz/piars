@@ -31,6 +31,12 @@ const initialState = {
 
 const state = {}
 
+function update(changes) {
+  Object.assign(state, changes)
+  render(changes)
+  localStorage.setItem('piarsStateV1', JSON.stringify(state))
+}
+
 function getNotifications(tab = state.selected) {
   return tab in state.allNotifications
     ? Object.values(state.allNotifications[tab])
@@ -41,4 +47,9 @@ function getSortedNotifications() {
   const notifications = getNotifications()
   notifications.sort((a, b) => b.updatedAt - a.updatedAt)
   return notifications
+}
+
+function selectTab(delta) {
+  const next = state.tabs.indexOf(state.selected) + delta
+  if (next in state.tabs) update({ selected: state.tabs[next] })
 }
