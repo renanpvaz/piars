@@ -1,33 +1,26 @@
-async function fetchNotifications(token, lastModified = '') {
+async function fetchNotifications(token) {
   const url = `https://api.github.com/notifications?all=true`
 
-  try {
-    const response = await fetch(url, {
-      headers: {
-        Authorization: `token ${token}`,
-        Accept: 'application/vnd.github.v3+json',
-        'If-Modified-Since': lastModified,
-      },
-    })
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `token ${token}`,
+      Accept: 'application/vnd.github.v3+json',
+    },
+  })
 
-    if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`)
-    }
-
-    data = await response.json()
-
-    return {
-      type: 'success',
-      pollInterval: response.headers.get('X-Poll-Interval'),
-      lastModified: response.headers.get('Last-Modified'),
-      data,
-    }
-  } catch (error) {
-    console.error('Error fetching data:', error)
+  if (!response.ok) {
     return {
       type: 'error',
       error,
     }
+  }
+
+  const data = await response.json()
+
+  return {
+    type: 'success',
+    pollInterval: response.headers.get('X-Poll-Interval'),
+    data,
   }
 }
 
@@ -93,30 +86,32 @@ function buildPRQuery(reposAndPRs) {
       `
 }
 
-async function fetchPullRequests(token, query) {
-  try {
-    const response = await fetch('https://api.github.com/graphql', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query }),
-    })
+async function fetchPullRequests(query, token) {
+  const response = await fetch('https://api.github.com/graphql', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query }),
+  })
 
-    if (!response.ok) {
-      throw new Error(`GitHub API error: ${response.statusText}`)
+  if (!response.ok) {
+    return {
+      type: 'error',
+      error,
     }
+  }
 
-    const data = await response.json()
+  const { data } = await response.json()
 
-    return data
-  } catch (error) {
-    console.error('Error fetching data:', error)
+  return {
+    type: 'success',
+    data,
   }
 }
 
-async function enrichWithPullRequestData(token, notifications) {
+async function enrichWithPullRequestData(notifications, token) {
   const prNotifications = notifications.filter(
     (n) => n.subject.type === 'PullRequest',
   )
@@ -127,8 +122,14 @@ async function enrichWithPullRequestData(token, notifications) {
   }))
 
   const query = buildPRQuery(pullRequestParams)
-  const { data } = await fetchPullRequests(token, query)
-  const { viewer, ...pullRequests } = data
+  const result = await fetchPullRequests(query, token)
+
+  if (result.type === 'error') {
+    console.warn('Error fetching pull requests, ignoring')
+    return []
+  }
+
+  const { viewer, ...pullRequests } = result.data
 
   const pullsPerRepo = Object.values(pullRequests).reduce(
     (acc, { pullRequest }) => {
@@ -144,7 +145,7 @@ async function enrichWithPullRequestData(token, notifications) {
     {},
   )
 
-  return Object.fromEntries(
+  const enriched = Object.fromEntries(
     prNotifications.map((n) => {
       const [org, repositoryName, _, pullNumber] = n.subject.url
         .replace('https://api.github.com/repos/', '')
@@ -155,6 +156,8 @@ async function enrichWithPullRequestData(token, notifications) {
       return [`${name}/${pullRequest.number}`, toEntry(n, pullRequest, viewer)]
     }),
   )
+
+  return { notifications: enriched }
 }
 
 function toEntry(notification, pullRequest, viewer) {
@@ -182,16 +185,6 @@ function toEntry(notification, pullRequest, viewer) {
   }
 }
 
-// DRAFT
-// | OPEN (no reviews)
-// | REVIEWED_BY_THEM
-// | REVIEWED_BY_ME
-// | REVIEWED
-// | APPROVED_BY_THEM
-// | APPROVED_BY_ME
-// | APPROVED
-// | MERGED
-// | CLOSED
 function progress(viewer, pr) {
   if (pr.isDraft) return ['DRAFT']
   if (['CLOSED', 'MERGED'].includes(pr.state)) return [pr.state]

@@ -101,20 +101,16 @@ async function pollNotifications(
   previousResult = {
     type: 'success',
     pollInterval: 60,
-    lastModified: '',
     data: [],
   },
 ) {
-  let result = await fetchNotifications(
-    accessToken,
-    previousResult.lastModified,
-  )
+  let result = await fetchNotifications(accessToken)
 
   result = result.type === 'success' ? result : previousResult
 
-  const notifications = await enrichWithPullRequestData(
-    accessToken,
+  const { notifications } = await enrichWithPullRequestData(
     result.data,
+    accessToken,
   )
 
   callback(notifications)
