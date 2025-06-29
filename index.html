@@ -109,11 +109,6 @@
             display: block;
         }
 
-        .content--config .search,
-        .content--config .results {
-            display: none;
-        }
-
         .results {
             padding: 8px 0;
         }
@@ -351,9 +346,13 @@
         }
 
         .config {
-            display: none;
-            width: 600px;
+            padding: 16px 32px;
+            max-width: 800px;
+        }
+
+        .config__input {
             padding: 16px;
+            width: 100%;
             font-size: 14px;
         }
 
@@ -377,6 +376,10 @@
         <div class="results">
             <span>Counting all the nits...</span>
         </div>
+    </div>
+    <div class="config" hidden>
+        <textarea class="config__input" rows="30"></textarea>
+        <button class="config__button">save config</button>
     </div>
     <script src="config.js"></script>
     <script src="state.js"></script>

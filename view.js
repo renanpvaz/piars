@@ -1,21 +1,38 @@
 function render(changes) {
-  if ('selected' in changes && state.selected === 'config') renderConfig()
+  const content = document.querySelector('.content')
+  const config = document.querySelector('.config')
 
-  if ('filter' in changes) renderSearch(document.querySelector('.search'))
+  content.hidden = false
+  config.hidden = true
 
-  const notifications = getSortedNotifications()
+  if ('selected' in changes && state.selected === 'config') {
+    config.hidden = false
+    content.hidden = true
+
+    const input = document.querySelector('.config__input')
+    input.value = showConfig()
+
+    document.querySelector('.config__button').onclick = () => {
+      if (readConfig(input.value)) {
+        applyConfig()
+        input.classList.remove('config--invalid')
+      } else {
+        input.classList.add('config--invalid')
+      }
+    }
+  }
 
   document
     .querySelector('.tabs__container')
     .replaceChildren(...state.tabs.map(renderTab))
 
-  document
-    .querySelector('.results')
-    .replaceChildren(...notifications.map(renderNotification))
+  const notifications = getSortedNotifications()
 
-  document
-    .querySelector('.content')
-    .classList.toggle('content--config', state.selected === 'config')
+  if (notifications.length) {
+    document
+      .querySelector('.results')
+      .replaceChildren(...notifications.map(renderNotification))
+  }
 
   renderTitle()
 }
@@ -140,34 +157,7 @@ function elapsedTime(time) {
   return 'just now'
 }
 
-function renderConfig() {
-  const container = document.createElement('div')
-  const input = document.createElement('textarea')
-
-  input.className = 'config'
-  input.value = showConfig()
-  input.rows = 15
-
-  container.appendChild(input)
-
-  const button = document.createElement('button')
-
-  button.textContent = 'save'
-  button.addEventListener('click', () => {
-    if (readConfig(input.value)) {
-      applyConfig()
-      input.classList.remove('config--invalid')
-    } else {
-      input.classList.add('config--invalid')
-    }
-  })
-
-  container.appendChild(button)
-
-  document.querySelector('.content').appendChild(container)
-
-  return container
-}
+function renderConfig() {}
 
 function renderTitle() {
   document.title = `(${getNotifications().length}) ${state.selected}`
