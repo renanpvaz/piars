@@ -2,10 +2,21 @@ const state = {
   notifications: {},
 }
 
-function applyConfig() {
+function initializeState() {
   update({
     selected: config.accessToken ? config.tabs[0].name : 'config',
     tabs: config.tabs.map((tab) => tab.name).concat('config'),
+  })
+}
+
+function applyConfig() {
+  update({
+    tabs: config.tabs.map((tab) => tab.name).concat('config'),
+  })
+  getWorker().postMessage({
+    type: 'config_changed',
+    config,
+    notifications: state.notifications,
   })
 }
 

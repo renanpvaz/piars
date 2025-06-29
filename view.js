@@ -1,11 +1,8 @@
-function render(changes) {
+function render() {
   const content = document.querySelector('.content')
   const config = document.querySelector('.config')
 
-  content.hidden = false
-  config.hidden = true
-
-  if ('selected' in changes && state.selected === 'config') {
+  if (state.selected === 'config') {
     config.hidden = false
     content.hidden = true
 
@@ -20,6 +17,9 @@ function render(changes) {
         input.classList.add('config--invalid')
       }
     }
+  } else {
+    content.hidden = false
+    config.hidden = true
   }
 
   document

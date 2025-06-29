@@ -4,13 +4,13 @@ onmessage = (e) => {
   switch (e.data.type) {
     case 'page_loaded':
       postMessage({ type: 'fetch_started' })
-
       pollNotifications((notifications) => {
         e.data.tabs.forEach((tab) => runFilter(tab, notifications))
       }, e.data.accessToken)
       return
 
-    case 'filter_selected':
+    case 'config_changed':
+      e.data.tabs.forEach((tab) => runFilter(tab, e.data.notifications))
       return
   }
 }

@@ -12,7 +12,7 @@ function getWorker() {
 
 ;(async function init() {
   initializeConfig()
-  applyConfig()
+  initializeState()
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') selectTab(+1)
