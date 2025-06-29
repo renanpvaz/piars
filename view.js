@@ -50,21 +50,24 @@ function renderTab(tab) {
   const button = document.createElement('button')
 
   button.className = 'tab-button'
-  button.textContent = tab
   button.classList.toggle('tab-button--selected', tab === state.selected)
   button.onclick = () => {
     update({ selected: tab })
   }
 
   const count = getNotifications(tab).length
+  const counter = document.createElement('span')
 
-  if (count) {
-    const counter = document.createElement('span')
-
-    counter.textContent = `${count}`.padStart(2, '0')
+  if (tab !== 'config') {
+    counter.textContent = count ? `${count}`.padStart(2, '0') : '--'
     counter.className = 'tab-counter'
     button.appendChild(counter)
   }
+
+  const content = document.createElement('span')
+
+  content.textContent = tab
+  button.appendChild(content)
 
   return button
 }
