@@ -134,12 +134,17 @@ function elapsedTime(time) {
   const hours = Math.floor(minutes / 60)
   const days = Math.floor(hours / 24)
   const weeks = Math.floor(days / 7)
+
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+
   const startOfWeek = new Date().getDate() - new Date().getDay()
 
   if (weeks > 1) return `${weeks}w ago`
   if (days <= 28 && days > 1 && new Date(time).getDate() < startOfWeek)
     return 'last week'
-  if (days === 1) return 'yesterday'
+  if (yesterday.toLocaleDateString() === new Date(time).toLocaleDateString())
+    return 'yesterday'
   if (days > 0) return `${days}d ago`
   if (hours > 0) return `${hours}h ago`
   if (minutes > 0) return `${minutes}m ago`
