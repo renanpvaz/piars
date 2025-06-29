@@ -3,8 +3,6 @@ function render(changes) {
 
   if ('filter' in changes) renderSearch(document.querySelector('.search'))
 
-  if (state.accessToken) hideInstructions()
-
   const notifications = getSortedNotifications()
 
   document
@@ -22,26 +20,15 @@ function render(changes) {
   renderTitle()
 }
 
-function hideInstructions() {
-  const container = document.querySelector('.instructions')
-  if (container) container.style.display = 'none'
-}
-
 function renderSearch(container) {
-  const { type, expression } = state.filter
-
-  container.className = `search search--${type}`
+  container.className = `search`
 
   const textarea = container.firstElementChild
 
   textarea.className = `searchbar`
   textarea.type = 'search'
-  textarea.placeholder = 'query or javascript expression'
-  textarea.value = expression
-  textarea.oninput = () => {
-    update({ query: { ...state.query, [state.selected]: textarea.value } })
-    runCurrentFilter()
-  }
+  textarea.placeholder = 'search for PRs'
+  textarea.oninput = () => {}
 
   return container
 }
@@ -154,24 +141,29 @@ function elapsedTime(time) {
 }
 
 function renderConfig() {
-  const container =
-    document.querySelector('.config') || document.createElement('div')
+  const container = document.createElement('div')
   const input = document.createElement('textarea')
 
   input.className = 'config'
-  input.value = JSON.stringify(state.settings, null, 2)
-  input.rows = 10
-  input.onchange = () => {
-    try {
-      const newConfig = JSON.parse(input.value)
-      update({ settings: newConfig })
-      input.classList.remove('config--invalid')
-    } catch {
-      input.classList.add('config--invalid')
-    }
-  }
+  input.value = showConfig()
+  input.rows = 15
 
   container.appendChild(input)
+
+  const button = document.createElement('button')
+
+  button.textContent = 'save'
+  button.addEventListener('click', () => {
+    if (readConfig(input.value)) {
+      applyConfig()
+      input.classList.remove('config--invalid')
+    } else {
+      input.classList.add('config--invalid')
+    }
+  })
+
+  container.appendChild(button)
+
   document.querySelector('.content').appendChild(container)
 
   return container

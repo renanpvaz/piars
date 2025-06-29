@@ -1,45 +1,22 @@
-const initialState = {
-  version: '1',
-  tabs: [
-    'all',
-    'needs review',
-    'approved',
-    'mine',
-    'dependabot',
-    'big',
-    'config',
-  ],
-  query: {
-    all: '',
-    'needs review':
-      'state === "OPEN" && reviewDecision !== "APPROVED" && author !== viewer',
-    approved: 'reviewDecision === "APPROVED"',
-    mine: 'author === viewer',
-    dependabot: 'author === "dependabot"',
-    big: 'changedFiles > 10',
-  },
-  selected: 'all',
-  notifications: [],
-  allNotifications: {},
-  settings: {
-    theme: 'light',
-    debug: false,
-    pollIntervalMili: 1000 * 30,
-    wallpaperUrl: '',
-  },
+const state = {
+  notifications: {},
 }
 
-const state = {}
+function applyConfig() {
+  update({
+    selected: config.accessToken ? config.tabs[0].name : 'config',
+    tabs: config.tabs.map((tab) => tab.name).concat('config'),
+  })
+}
 
 function update(changes) {
   Object.assign(state, changes)
   render(changes)
-  localStorage.setItem('piarsStateV1', JSON.stringify(state))
 }
 
 function getNotifications(tab = state.selected) {
-  return tab in state.allNotifications
-    ? Object.values(state.allNotifications[tab])
+  return tab in state.notifications
+    ? Object.values(state.notifications[tab])
     : []
 }
 

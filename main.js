@@ -1,21 +1,5 @@
 let worker
 
-function loadPreviousState() {
-  let cachedState
-  try {
-    cachedState = JSON.parse(localStorage.getItem('piarsStateV1'))
-  } catch {}
-
-  if (!cachedState) return
-
-  // TODO figure out what to cache
-  const { accessToken } = cachedState
-
-  return Object.assign(initialState, {
-    accessToken,
-  })
-}
-
 function getWorker() {
   if (!window.Worker) return
 
@@ -26,23 +10,20 @@ function getWorker() {
   return worker
 }
 
-function setToken(token) {
-  state.accessToken = token
-}
-
 ;(async function init() {
-  update(loadPreviousState() || initialState)
+  initializeConfig()
+  applyConfig()
 
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') selectTab(+1)
     if (e.key === 'ArrowLeft') selectTab(-1)
   })
 
-  if (state.accessToken) {
+  if (config.accessToken) {
     getWorker().postMessage({
       type: 'page_loaded',
-      filters: Object.entries(state.query),
-      accessToken: state.accessToken,
+      tabs: config.tabs,
+      accessToken: config.accessToken,
     })
   }
 
@@ -52,9 +33,9 @@ function setToken(token) {
         const { filter, tab, value } = e.data
         update({
           filter,
-          allNotifications: {
-            ...state.allNotifications,
-            [tab]: { ...state.allNotifications[tab], ...value },
+          notifications: {
+            ...state.notifications,
+            [tab.name]: { ...state.notifications[tab.name], ...value },
           },
         })
         break

@@ -6,9 +6,7 @@ onmessage = (e) => {
       postMessage({ type: 'fetch_started' })
 
       pollNotifications((notifications) => {
-        e.data.filters.forEach(([tab, filter]) =>
-          runFilter(tab, filter, notifications),
-        )
+        e.data.tabs.forEach((tab) => runFilter(tab, notifications))
       }, e.data.accessToken)
       return
 
@@ -17,8 +15,8 @@ onmessage = (e) => {
   }
 }
 
-function runFilter(tab, filter, notifications) {
-  const evaluatedFilter = validateFilter(filter)
+function runFilter(tab, notifications) {
+  const evaluatedFilter = validateFilter(tab.query)
 
   const payload = {
     type: 'filter_applied',
@@ -26,7 +24,7 @@ function runFilter(tab, filter, notifications) {
     filter: evaluatedFilter,
     value: Object.fromEntries(
       Object.entries(notifications).filter(
-        ([_key, element]) => evalFilter(filter, element).value,
+        ([_key, element]) => evalFilter(tab.query, element).value,
       ),
     ),
   }

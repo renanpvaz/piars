@@ -43,7 +43,7 @@
         }
 
         .debug * {
-            animation: debug .5s
+            animation: debug 0.5s;
         }
 
         @keyframes debug {
@@ -164,7 +164,6 @@
             margin-left: -3px;
         }
 
-
         .pr+.pr {
             border-top: 1px solid #ddd;
         }
@@ -187,12 +186,12 @@
         }
 
         .pr--reviewed_by_me {
-            --status-inner-color: #5E5E5E;
+            --status-inner-color: #5e5e5e;
             --status-inner-opacity: 1;
         }
 
         .pr--reviewed_by_them {
-            --status-outer-color: #5E5E5E;
+            --status-outer-color: #5e5e5e;
             --status-inner-opacity: 1;
         }
 
@@ -223,7 +222,11 @@
         }
 
         .pr:hover {
-            box-shadow: inset 1px 0 0 rgb(218, 220, 224), inset -1px 0 0 rgb(218, 220, 224), 0 1px 1px 0 rgba(60, 64, 67, .3), 0 1px 3px 1px rgba(60, 64, 67, .15);
+            box-shadow:
+                inset 1px 0 0 rgb(218, 220, 224),
+                inset -1px 0 0 rgb(218, 220, 224),
+                0 1px 1px 0 rgba(60, 64, 67, 0.3),
+                0 1px 3px 1px rgba(60, 64, 67, 0.15);
         }
 
         .filter {
@@ -260,7 +263,7 @@
             background: 0;
             border: 0;
             z-index: 1;
-            opacity: .5;
+            opacity: 0.5;
             line-height: 20px;
             height: 30px;
         }
@@ -347,22 +350,6 @@
             border: 0;
         }
 
-        .instructions {
-            line-height: 1.5;
-            border: 1px solid;
-            position: absolute;
-            padding: 32px;
-            max-width: 600px;
-            box-sizing: border-box;
-            background: white;
-            top: 100px;
-        }
-
-        .instructions__form {
-            display: flex;
-            margin-bottom: 8px;
-        }
-
         .config {
             display: none;
             width: 600px;
@@ -371,7 +358,7 @@
         }
 
         .config--invalid {
-            border-color: var(--accent-red)
+            border-color: var(--accent-red);
         }
     </style>
 </head>
@@ -390,37 +377,8 @@
         <div class="results">
             <span>Counting all the nits...</span>
         </div>
-        <div class="instructions">
-            <div class="instructions__form">
-                <input class="token-input" placeholder="<GITHUB ACCESS TOKEN>"
-                    oninput="state.accessToken = event.target.value">
-                </input>
-                <button onclick="startPolling()">done!</button>
-            </div>
-            <p>
-                We need a GitHub token to access pull request data. You can go
-                to
-                <a class="link" href="https://github.com/settings/tokens">Settings > Developer Settings > Personal
-                    access tokens</a>
-                to get one.
-            </p>
-            <br>
-            <p>Make sure you
-            <ul>
-                <li>
-                    include <code>notifications</code> <code>read:discussion</code>
-                    <code>read:org</code> <code>repo</code> scopes
-                </li>
-                <li>
-                    have notifications option <code>On GitHub</code> enabled on
-                    <a class="link" href="https://github.com/settings/notifications">Settings > Notifications</a>
-                </li>
-            </ul>
-            </p>
-            <br>
-            <p><a class="link" href="https://github.com/renanpvaz/piars"><small>I don't trust this</small></a></p>
-        </div>
     </div>
+    <script src="config.js"></script>
     <script src="state.js"></script>
     <script src="github.js"></script>
     <script src="view.js"></script>
