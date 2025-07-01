@@ -28,11 +28,17 @@ function render() {
 
   const notifications = getSortedNotifications()
 
-  if (notifications.length) {
-    document
-      .querySelector('.results')
-      .replaceChildren(...notifications.map(renderNotification))
-  }
+  document.querySelector('.results').replaceChildren(
+    ...(notifications.length
+      ? notifications.map(renderNotification)
+      : [
+          Object.assign(document.createElement('span'), {
+            textContent: state.loading
+              ? 'Loading pull requests...'
+              : 'No pull requests matching filters.',
+          }),
+        ]),
+  )
 
   renderTitle()
 }

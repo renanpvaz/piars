@@ -31,6 +31,7 @@ function getWorker() {
     switch (e.data.type) {
       case 'notifications_received':
         update({
+          loading: false,
           notifications: {
             ...state.notifications,
             ...e.data.notifications,
@@ -53,6 +54,7 @@ function getWorker() {
 
       case 'fetch_started':
         document.title = 'Polling for fresh PRs'
+        update({ loading: true })
         break
     }
   }
