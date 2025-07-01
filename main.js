@@ -29,13 +29,24 @@ function getWorker() {
 
   getWorker().onmessage = (e) => {
     switch (e.data.type) {
+      case 'notifications_received':
+        update({
+          notifications: {
+            ...state.notifications,
+            ...e.data.notifications,
+          },
+        })
+        break
       case 'filter_applied':
         const { filter, tab, value } = e.data
         update({
           filter,
-          notifications: {
-            ...state.notifications,
-            [tab.name]: { ...state.notifications[tab.name], ...value },
+          tabs: {
+            ...state.tabs,
+            [tab.name]: {
+              ...state.tabs[tab.name],
+              notifications: value.map((n) => n.id),
+            },
           },
         })
         break

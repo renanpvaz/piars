@@ -5,7 +5,10 @@ const state = {
 function initializeState() {
   update({
     selected: config.accessToken ? config.tabs[0].name : 'config',
-    tabs: config.tabs.map((tab) => tab.name).concat('config'),
+    tabs: Object.assign(
+      { config: { notifications: [] } },
+      ...config.tabs.map((tab) => ({ [tab.name]: { notifications: [] } })),
+    ),
   })
 }
 
@@ -26,9 +29,7 @@ function update(changes) {
 }
 
 function getNotifications(tab = state.selected) {
-  return tab in state.notifications
-    ? Object.values(state.notifications[tab])
-    : []
+  return state.tabs[tab].notifications.map((id) => state.notifications[id])
 }
 
 function getSortedNotifications() {
@@ -38,6 +39,6 @@ function getSortedNotifications() {
 }
 
 function selectTab(delta) {
-  const next = state.tabs.indexOf(state.selected) + delta
+  const next = Object.keys(state.tabs).indexOf(state.selected) + delta
   if (next in state.tabs) update({ selected: state.tabs[next] })
 }

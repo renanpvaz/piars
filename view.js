@@ -24,7 +24,7 @@ function render() {
 
   document
     .querySelector('.tabs__container')
-    .replaceChildren(...state.tabs.map(renderTab))
+    .replaceChildren(...Object.entries(state.tabs).map(renderTab))
 
   const notifications = getSortedNotifications()
 
@@ -50,7 +50,7 @@ function renderSearch(container) {
   return container
 }
 
-function renderTab(tab) {
+function renderTab([tab, _]) {
   const button = document.createElement('button')
 
   button.className = 'tab-button'

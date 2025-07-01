@@ -4,7 +4,9 @@ onmessage = (e) => {
   switch (e.data.type) {
     case 'page_loaded':
       postMessage({ type: 'fetch_started' })
+
       pollNotifications((notifications) => {
+        postMessage({ type: 'notifications_received', notifications })
         e.data.tabs.forEach((tab) => runFilter(tab, notifications))
       }, e.data.accessToken)
       return
@@ -22,10 +24,8 @@ function runFilter(tab, notifications) {
     type: 'filter_applied',
     tab,
     filter: evaluatedFilter,
-    value: Object.fromEntries(
-      Object.entries(notifications).filter(
-        ([_key, element]) => evalFilter(tab.query, element).value,
-      ),
+    value: Object.values(notifications).filter(
+      (notification) => evalFilter(tab.query, notification).value,
     ),
   }
 
