@@ -1,6 +1,6 @@
 importScripts('github.js')
 
-let timeout
+let pollTimer
 
 onmessage = (e) => {
   switch (e.data.type) {
@@ -17,9 +17,9 @@ onmessage = (e) => {
 }
 
 function startPolling(tabs, accessToken) {
-  if (timeout) clearTimeout(timeout)
+  if (pollTimer) clearTimeout(pollTimer)
 
-  timeout = pollNotifications((notifications) => {
+  pollTimer = pollNotifications((notifications) => {
     postMessage({ type: 'notifications_received', notifications })
     tabs.forEach((tab) => runFilter(tab, notifications))
   }, accessToken)

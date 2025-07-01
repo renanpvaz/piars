@@ -2,6 +2,8 @@ const state = {
   notifications: {},
 }
 
+let searchTimer
+
 function initializeState() {
   update({
     selected: config.accessToken ? config.tabs[0].name : 'config',
@@ -33,8 +35,18 @@ function update(changes) {
   render(changes)
 }
 
+function setQuery(query) {
+  if (searchTimer) clearTimeout(searchTimer)
+
+  searchTimer = setTimeout(() => {
+    update({ query })
+  }, 300)
+}
+
 function getNotifications(tab = state.selected) {
-  return state.tabs[tab].notifications.map((id) => state.notifications[id])
+  return state.tabs[tab].notifications
+    .map((id) => state.notifications[id])
+    .filter((n) => n.title.match(new RegExp(state.query, 'i')))
 }
 
 function getSortedNotifications() {
@@ -43,7 +55,12 @@ function getSortedNotifications() {
   return notifications
 }
 
-function selectTab(delta) {
-  const next = Object.keys(state.tabs).indexOf(state.selected) + delta
-  if (next in state.tabs) update({ selected: state.tabs[next] })
+function selectTab(tab) {
+  update({ selected: tab })
+}
+
+function shiftTab(delta) {
+  const tabs = Object.keys(state.tabs)
+  const next = tabs.indexOf(state.selected) + delta
+  if (next in tabs) selectTab(tabs[next])
 }

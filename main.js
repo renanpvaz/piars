@@ -15,8 +15,8 @@ function getWorker() {
   initializeState()
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') selectTab(+1)
-    if (e.key === 'ArrowLeft') selectTab(-1)
+    if (e.key === 'ArrowRight') shiftTab(+1)
+    if (e.key === 'ArrowLeft') shiftTab(-1)
   })
 
   if (config.accessToken) {

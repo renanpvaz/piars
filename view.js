@@ -37,26 +37,13 @@ function render() {
   renderTitle()
 }
 
-function renderSearch(container) {
-  container.className = `search`
-
-  const textarea = container.firstElementChild
-
-  textarea.className = `searchbar`
-  textarea.type = 'search'
-  textarea.placeholder = 'search for PRs'
-  textarea.oninput = () => {}
-
-  return container
-}
-
 function renderTab([tab, _]) {
   const button = document.createElement('button')
 
   button.className = 'tab-button'
   button.classList.toggle('tab-button--selected', tab === state.selected)
   button.onclick = () => {
-    update({ selected: tab })
+    selectTab(tab)
   }
 
   const count = getNotifications(tab).length
