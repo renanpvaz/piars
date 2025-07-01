@@ -146,14 +146,17 @@ async function enrichWithPullRequestData(notifications, token) {
   )
 
   const enriched = Object.fromEntries(
-    prNotifications.map((n) => {
-      const [org, repositoryName, _, pullNumber] = n.subject.url
+    prNotifications.map((notification) => {
+      const [org, repositoryName, _, pullNumber] = notification.subject.url
         .replace('https://api.github.com/repos/', '')
         .split('/')
       const name = `${org}/${repositoryName}`
       const pullRequest = pullsPerRepo[name] && pullsPerRepo[name][pullNumber]
+      const entry = toEntry(notification, pullRequest, viewer)
 
-      return [`${name}/${pullRequest.number}`, toEntry(n, pullRequest, viewer)]
+      entry.id = `${name}/${pullRequest.number}`
+
+      return [entry.id, entry]
     }),
   )
 
