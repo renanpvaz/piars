@@ -5,20 +5,24 @@ const state = {
 function initializeState() {
   update({
     selected: config.accessToken ? config.tabs[0].name : 'config',
-    tabs: Object.assign(
-      { config: { notifications: [] } },
-      ...config.tabs.map((tab) => ({ [tab.name]: { notifications: [] } })),
-    ),
+    tabs: initializeTabs(),
   })
 }
 
+function initializeTabs() {
+  return Object.assign(
+    ...config.tabs
+      .concat({ name: 'config' })
+      .map((tab) => ({ [tab.name]: { notifications: [] } })),
+  )
+}
+
 function applyConfig() {
-  update({
-    tabs: config.tabs.map((tab) => tab.name).concat('config'),
-  })
+  update({ tabs: initializeTabs() })
+
   getWorker().postMessage({
     type: 'config_changed',
-    config,
+    tabs: config.tabs,
     notifications: state.notifications,
   })
 }
