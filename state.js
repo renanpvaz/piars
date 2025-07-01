@@ -23,6 +23,7 @@ function applyConfig() {
   getWorker().postMessage({
     type: 'config_changed',
     tabs: config.tabs,
+    accessToken: config.accessToken,
     notifications: state.notifications,
   })
 }

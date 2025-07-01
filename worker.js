@@ -1,20 +1,28 @@
 importScripts('github.js')
 
+let timeout
+
 onmessage = (e) => {
   switch (e.data.type) {
     case 'page_loaded':
       postMessage({ type: 'fetch_started' })
-
-      pollNotifications((notifications) => {
-        postMessage({ type: 'notifications_received', notifications })
-        e.data.tabs.forEach((tab) => runFilter(tab, notifications))
-      }, e.data.accessToken)
+      startPolling(e.data.tabs, e.data.accessToken)
       return
 
     case 'config_changed':
       e.data.tabs.forEach((tab) => runFilter(tab, e.data.notifications))
+      startPolling(e.data.tabs, e.data.accessToken)
       return
   }
+}
+
+function startPolling(tabs, accessToken) {
+  if (timeout) clearTimeout(timeout)
+
+  timeout = pollNotifications((notifications) => {
+    postMessage({ type: 'notifications_received', notifications })
+    tabs.forEach((tab) => runFilter(tab, notifications))
+  }, accessToken)
 }
 
 function runFilter(tab, notifications) {
@@ -113,7 +121,7 @@ async function pollNotifications(
 
   callback(notifications)
 
-  setTimeout(
+  return setTimeout(
     () => pollNotifications(callback, accessToken, result),
     1000 * result.pollInterval,
   )
