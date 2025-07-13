@@ -8,15 +8,6 @@ function render() {
 
     const input = document.querySelector('.config__input')
     input.value = showConfig()
-
-    document.querySelector('.config__button').onclick = () => {
-      if (readConfig(input.value)) {
-        applyConfig()
-        input.classList.remove('config--invalid')
-      } else {
-        input.classList.add('config--invalid')
-      }
-    }
   } else {
     content.hidden = false
     config.hidden = true
@@ -150,7 +141,18 @@ function elapsedTime(time) {
   return 'just now'
 }
 
-function renderConfig() {}
+function saveConfig(e) {
+  e.preventDefault()
+
+  const { configuration: input } = e.target
+
+  if (readConfig(input.value)) {
+    applyConfig()
+    input.classList.remove('config--invalid')
+  } else {
+    input.classList.add('config--invalid')
+  }
+}
 
 function renderTitle() {
   document.title = `(${getNotifications().length}) ${state.selected}`

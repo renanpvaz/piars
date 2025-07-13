@@ -316,8 +316,17 @@
       </div>
     </div>
     <div class="config" hidden>
-      <textarea class="config__input" rows="30"></textarea>
-      <button class="config__button">save config</button>
+      <form onsubmit="saveConfig(event)">
+        <textarea
+          class="config__input"
+          rows="30"
+          name="configuration"
+        ></textarea>
+        <button type="button" class="config__button" onclick="resetConfig()">
+          reset config
+        </button>
+        <button type="submit" class="config__button">save config</button>
+      </form>
     </div>
     <script src="config.js"></script>
     <script src="state.js"></script>
