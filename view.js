@@ -154,6 +154,28 @@ function saveConfig(e) {
   }
 }
 
+function updateFocus(delta) {
+  const prs = [...document.querySelectorAll('.pr')]
+
+  if (!prs.length) return
+
+  if (
+    !document.activeElement ||
+    !document.activeElement.classList.contains('pr')
+  ) {
+    prs[0].focus({ focusVisible: true })
+  }
+
+  const index = prs.indexOf(document.activeElement)
+  const next = prs[index + delta]
+
+  if (next) next.focus({ focusVisible: true })
+}
+
+function focusSearch() {
+  document.querySelector('.searchbar')?.focus({ focusVisible: true })
+}
+
 function renderTitle() {
   document.title = `(${getNotifications().length}) ${state.selected}`
 }

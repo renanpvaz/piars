@@ -10,13 +10,26 @@ function getWorker() {
   return worker
 }
 
+const handlers = {
+  ArrowRight: () => shiftTab(+1),
+  ArrowLeft: () => shiftTab(-1),
+  ArrowDown: () => updateFocus(+1),
+  ArrowUp: () => updateFocus(-1),
+  f: (e) => e.ctrlKey && focusSearch(),
+}
+
 ;(async function init() {
   initializeConfig()
   initializeState()
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight') shiftTab(+1)
-    if (e.key === 'ArrowLeft') shiftTab(-1)
+    const handler = handlers[e.key]
+    const fromInput = e.target.selectionStart
+
+    if (handler && !fromInput) {
+      e.preventDefault()
+      handler(e)
+    }
   })
 
   if (config.accessToken) {
