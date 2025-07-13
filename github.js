@@ -1,26 +1,19 @@
 async function fetchNotifications(token) {
-  const url = `https://api.github.com/notifications?all=true`
+  const url = 'https://api.github.com/notifications?all=true'
 
-  const response = await fetch(url, {
+  const result = await fetchSafe(url, {
     headers: {
       Authorization: `token ${token}`,
       Accept: 'application/vnd.github.v3+json',
     },
   })
 
-  if (!response.ok) {
-    return {
-      type: 'error',
-      error,
-    }
-  }
-
-  const data = await response.json()
+  if (result.type !== 'success') return result
 
   return {
     type: 'success',
-    pollInterval: response.headers.get('X-Poll-Interval'),
-    data,
+    pollInterval: result.response.headers.get('X-Poll-Interval'),
+    data: result.data,
   }
 }
 
@@ -87,7 +80,7 @@ function buildPRQuery(reposAndPRs) {
 }
 
 async function fetchPullRequests(query, token) {
-  const response = await fetch('https://api.github.com/graphql', {
+  const result = await fetchSafe('https://api.github.com/graphql', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -96,19 +89,9 @@ async function fetchPullRequests(query, token) {
     body: JSON.stringify({ query }),
   })
 
-  if (!response.ok) {
-    return {
-      type: 'error',
-      error,
-    }
-  }
-
-  const { data } = await response.json()
-
-  return {
-    type: 'success',
-    data,
-  }
+  return result.type === 'success'
+    ? { type: 'success', data: result.data.data }
+    : result
 }
 
 async function enrichWithPullRequestData(notifications, token) {
@@ -125,8 +108,8 @@ async function enrichWithPullRequestData(notifications, token) {
   const result = await fetchPullRequests(query, token)
 
   if (result.type === 'error') {
-    console.warn('Error fetching pull requests, ignoring')
-    return []
+    console.warn('github.enrichWithPullRequestData.error')
+    return { notifications: [] }
   }
 
   const { viewer, ...pullRequests } = result.data
@@ -216,4 +199,28 @@ function progress(viewer, pr) {
   if (status.length) return status
 
   return ['OPEN']
+}
+
+async function fetchSafe(input, init) {
+  try {
+    const response = await fetch(input, init)
+
+    if (!response.ok) {
+      console.warn('github.fetch.bad_status', response.status, response.error)
+      return {
+        type: 'error',
+        error: 'bad_status',
+      }
+    }
+
+    const data = await response.json()
+
+    return { type: 'success', response, data }
+  } catch (error) {
+    console.warn('github.fetch.error', error)
+    return {
+      type: 'error',
+      error,
+    }
+  }
 }

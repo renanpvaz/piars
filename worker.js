@@ -119,7 +119,7 @@ async function pollNotifications(
     accessToken,
   )
 
-  callback(notifications)
+  if (Object.keys(notifications).length) callback(notifications)
 
   return setTimeout(
     () => pollNotifications(callback, accessToken, result),
