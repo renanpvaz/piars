@@ -11,11 +11,20 @@ function getWorker() {
 }
 
 const handlers = {
-  ArrowRight: () => shiftTab(+1),
-  ArrowLeft: () => shiftTab(-1),
-  ArrowDown: () => updateFocus(+1),
-  ArrowUp: () => updateFocus(-1),
-  f: (e) => e.ctrlKey && focusSearch(),
+  default: {
+    ArrowRight: () => shiftTab(+1),
+    ArrowLeft: () => shiftTab(-1),
+    ArrowDown: () => updateFocus(+1),
+    ArrowUp: () => updateFocus(-1),
+    f: (e) => e.ctrlKey && focusSearch(),
+  },
+  vim: {
+    l: () => shiftTab(+1),
+    h: () => shiftTab(-1),
+    j: () => updateFocus(+1),
+    k: () => updateFocus(-1),
+    '/': () => focusSearch(),
+  },
 }
 
 ;(async function init() {
@@ -23,7 +32,7 @@ const handlers = {
   initializeState()
 
   document.addEventListener('keydown', (e) => {
-    const handler = handlers[e.key]
+    const handler = handlers[config.keyBindings][e.key]
     const fromInput = e.target.selectionStart
 
     if (handler && !fromInput) {

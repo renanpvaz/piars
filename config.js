@@ -1,6 +1,7 @@
 const config = {}
 const initialConfig = {
   accessToken: '',
+  keyBindings: 'default',
   tabs: [
     { name: 'all' },
     {
