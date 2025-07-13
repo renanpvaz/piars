@@ -6,6 +6,7 @@ async function fetchNotifications(token) {
       Authorization: `token ${token}`,
       Accept: 'application/vnd.github.v3+json',
     },
+    cache: 'no-cache',
   })
 
   if (result.type !== 'success') return result
@@ -87,6 +88,7 @@ async function fetchPullRequests(query, token) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({ query }),
+    cache: 'no-cache',
   })
 
   return result.type === 'success'
